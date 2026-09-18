@@ -1,0 +1,53 @@
+{
+  "startup": {
+    "name": "Red Naciente",
+    "estaciones": 10,
+    "conectoresPorEstacion": 2,
+    "sesionesConectorDia": 1.5,
+    "kwhSesion": 25,
+    "precioKwh": 1800,
+    "pctSesionesAdicionales": 60.0,
+    "pctCanibalizacion": 5.0,
+    "margenFlypassPct": 12.0,
+    "costoRedCPO": 750,
+    "adquirenciaFlypassPct": 1.7,
+    "pasarelaCPOPct": 3.5,
+    "opexCPOPropioPct": 10.0,
+    "costoCloudOcpiPorSesion": 350,
+    "opexSoporteFlypass": 1000000
+  },
+  "consolidado": {
+    "name": "Red Consolidada",
+    "estaciones": 80,
+    "conectoresPorEstacion": 4,
+    "sesionesConectorDia": 3.5,
+    "kwhSesion": 35,
+    "precioKwh": 1900,
+    "pctSesionesAdicionales": 20.0,
+    "pctCanibalizacion": 5.0,
+    "margenFlypassPct": 8.0,
+    "costoRedCPO": 850,
+    "adquirenciaFlypassPct": 1.7,
+    "pasarelaCPOPct": 3.5,
+    "opexCPOPropioPct": 10.0,
+    "costoCloudOcpiPorSesion": 350,
+    "opexSoporteFlypass": 1000000
+  },
+  "urbano": {
+    "name": "Hub Urbano Alta",
+    "estaciones": 15,
+    "conectoresPorEstacion": 6,
+    "sesionesConectorDia": 7.0,
+    "kwhSesion": 20,
+    "precioKwh": 1850,
+    "pctSesionesAdicionales": 35.0,
+    "pctCanibalizacion": 5.0,
+    "margenFlypassPct": 10.0,
+    "costoRedCPO": 700,
+    "adquirenciaFlypassPct": 1.7,
+    "pasarelaCPOPct": 3.5,
+    "opexCPOPropioPct": 10.0,
+    "costoCloudOcpiPorSesion": 350,
+    "opexSoporteFlypass": 1000000
+  }
+}

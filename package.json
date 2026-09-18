@@ -1,0 +1,21 @@
+{
+  "name": "flypass-emsp-studio",
+  "version": "1.0.0",
+  "description": "Simulador interactivo del flujo del dinero y punto óptimo para el negocio eMSP B2C en Colombia, basado en el estándar OCPI 2.2.1.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "serve": "node server.js"
+  },
+  "keywords": [
+    "emsp",
+    "cpo",
+    "ev-charging",
+    "ocpi",
+    "flypass",
+    "financial-flow",
+    "colombia"
+  ],
+  "author": "FlyPass Strategy & Engineering",
+  "license": "ISC"
+}

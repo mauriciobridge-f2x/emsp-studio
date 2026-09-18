@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FlyPass <span class="tooltip-text" title="e-Mobility Service Provider: Proveedor de servicios de movilidad eléctrica (ej. FlyPass).">eMSP</span> Studio · Simulador Financiero y Ecosistema de Carga B2C (Colombia 2026)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       DESIGN TOKENS - ESTILO B2B SAAS (CORPORATIVO MINIMALISTA)
+       ========================================================================== */
+    :root {
+      --brand-blue: #0F172A; /* Slate 900 */
+      --brand-blue-tint: #F1F5F9; /* Slate 100 */
+      --brand-blue-ink: #020617; /* Slate 950 */
+      --brand-navy: #0F172A;
+      --brand-navy-2: #1E293B; /* Slate 800 */
+      --brand-navy-deep: #020617;
+      --brand-magenta: #0052FF; /* Electric Blue (reemplaza magenta) */
+      --brand-magenta-ink: #1D4ED8; /* Blue 700 */
+      --brand-green: #10B981; /* Emerald 500 */
+      --brand-green-soft: #ECFDF5;
+      --brand-green-dark: #047857; /* Emerald 700 */
+
+      --surface-app: #F8FAFC; /* Slate 50 */
+      --surface-card: #FFFFFF;
+      --surface-raised: #FFFFFF;
+      --surface-line: #E2E8F0; /* Slate 200 */
+      --surface-line-2: #CBD5E1; /* Slate 300 */
+
+      --fg-1: #334155; /* Slate 700 */
+      --fg-2: #475569; /* Slate 600 */
+      --fg-3: #64748B; /* Slate 500 */
+      --fg-4: #94A3B8; /* Slate 400 */
+      --fg-inverse: #FFFFFF;
+
+      --font-display: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+      --elev-1: 0 1px 2px rgba(0,0,0,.05);
+      --elev-2: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);
+      --elev-card: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--surface-app);
+      color: var(--fg-1);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 5px;
+      border-radius: 999px;
+      background: #DDE1E1;
+      outline: none;
+      transition: background .2s;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--brand-blue);
+      box-shadow: 0 2px 5px rgba(0,0,0,.28);
+      cursor: pointer;
+      transition: transform .15s, background .15s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      background: var(--brand-blue-ink);
+    }
+
+    @keyframes dashflow { to { background-position: 24px 0; } }
+    @keyframes bar-enter { from { transform: scaleY(0); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
+    @keyframes pulse-ebitda {
+      0% { filter: brightness(1); transform: scale(1); }
+      50% { filter: brightness(1.2); transform: scale(1.02); }
+      100% { filter: brightness(1); transform: scale(1); }
+    }
+
+    /* Animaciones interactivas Sankey */
+    .sankey-link {
+      transition: opacity 0.3s ease, stroke-width 0.3s ease;
+      cursor: pointer;
+    }
+    .sankey-link:hover { opacity: 1 !important; stroke-width: 0 !important; }
+    .sankey-link.faded { opacity: 0.1 !important; }
+    .sankey-link.highlight { opacity: 1 !important; stroke-width: 0 !important; }
+    
+    .sankey-node {
+      transition: opacity 0.3s ease, filter 0.3s ease, stroke-width 0.2s ease;
+    }
+    .sankey-node:hover { filter: brightness(1.15); stroke: #FFF; stroke-width: 2px; }
+    .sankey-node.faded { opacity: 0.25 !important; filter: grayscale(0.8); }
+
+    /* Animaciones interactivas Waterfall */
+    .waterfall-bar {
+      transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+      transform-origin: bottom;
+      cursor: crosshair;
+    }
+    .waterfall-bar:hover { filter: brightness(1.2); box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important; z-index: 10; }
+
+
+    /* Estilos de botones de selección / tabs */
+    .cpo-pill, .model-pill {
+      cursor: pointer;
+      border-radius: 4px;
+      padding: 8px 14px;
+      border: 1px solid var(--surface-line-2);
+      background: var(--surface-card);
+      color: var(--fg-2);
+      font-family: var(--font-sans);
+      font-weight: 600;
+      font-size: 12px;
+      transition: all .15s ease-in-out;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      text-align: left;
+    }
+    .cpo-pill:hover, .model-pill:hover {
+      border-color: var(--brand-magenta);
+      color: var(--brand-magenta);
+    }
+    .cpo-pill.active, .model-pill.active {
+      border-color: var(--brand-magenta);
+      background: var(--brand-blue-tint);
+      color: var(--brand-magenta-ink);
+      box-shadow: 0 0 0 1px var(--brand-magenta);
+    }
+
+    /* Scrollbars suaves */
+    [data-scroll] {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    [data-scroll]::-webkit-scrollbar { height: 6px; }
+    [data-scroll]::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+
+    /* Tarjetas ejecutivas */
+    .card-box {
+      background: var(--surface-card);
+      border-radius: 6px;
+      box-shadow: var(--elev-card);
+      padding: 24px 28px;
+      border: 1px solid var(--surface-line);
+    }
+
+    .badge-tag {
+      font-family: var(--font-sans);
+      font-weight: 700;
+      font-size: 10.5px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--brand-magenta);
+    }
+
+    /* Print media optimizada para presentaciones ejecutivas */
+    @media print {
+      @page { size: A4 landscape; margin: 10mm; }
+      body { background: #FFF !important; }
+      .no-print { display: none !important; }
+      .card-box { box-shadow: none !important; border: 1px solid #DDD !important; page-break-inside: avoid; }
+      #hero-banner { background: #2B293A !important; -webkit-print-color-adjust: exact; }
+    }
+
+    .tooltip-text { border-bottom: 1px dotted currentColor; cursor: help; }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================================================
+       BANNER HERO EJECUTIVO
+       ======================================================================== -->
+  <div id="hero-banner" style="background: var(--brand-navy); color: var(--fg-inverse); padding: 26px 36px 34px; border-bottom: 1px solid var(--surface-line-2);">
+    <div style="max-width: 1480px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
+      
+      <!-- Barra superior: Branding, Título y Badges de estado -->
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 30px; height: 30px; border-radius: 6px; background: var(--brand-magenta); display: flex; align-items: center; justify-content: center; ">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#FFF"><path d="M11 21h-1l1-7H7.5c-.88 0-.33-.75-.31-.78C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.4 0 .62.19.4.66C12.97 17.55 11 21 11 21z"/></svg>
+            </div>
+            <span style="font-family: var(--font-sans); font-weight: 800; font-size: 11px; letter-spacing: 2px; color: #CCDDFE;">FLYPASS <span class="tooltip-text" title="e-Mobility Service Provider: Proveedor de servicios de movilidad eléctrica (ej. FlyPass).">eMSP</span> STUDIO · B2C REVOLUTION</span>
+            <span style="background: rgba(149,193,31,.18); color: #B6D95A; font-weight: 700; font-size: 10px; padding: 3px 9px; border-radius: 999px; letter-spacing: 1px;">COLOMBIA 2026 · <span class="tooltip-text" title="Open Charge Point Interface: Protocolo estándar (ej. v2.2.1) para roaming entre eMSPs y CPOs.">OCPI</span> 2.2.1</span>
+          </div>
+          <h1 style="font-family: var(--font-display); font-weight: 700; font-size: 28px; line-height: 1.1; color: #FFF; margin-top: 4px;">
+            El Flujo del Dinero en el Negocio <span class="tooltip-text" title="e-Mobility Service Provider: Proveedor de servicios de movilidad eléctrica (ej. FlyPass).">eMSP</span>: De la Electrolinera a la Cuenta FlyPass
+          </h1>
+          <p style="font-family: var(--font-display); font-size: 14px; color: #C4CACA; max-width: 820px; line-height: 1.4;">
+            El usuario natural abre su App FlyPass, ubica cualquier electrolinera del país e inicia la carga vía <span class="tooltip-text" title="Open Charge Point Interface: Protocolo estándar (ej. v2.2.1) para roaming entre eMSPs y CPOs.">OCPI</span>.
+            Simule el ecosistema completo: compare el canal FlyPass vs. la app del <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> y descubra el <strong>punto óptimo de equilibrio</strong>.
+          </p>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 8px; background: rgba(149,193,31,.15); border: 1px solid rgba(149,193,31,.3); border-radius: 999px; padding: 7px 16px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--brand-green); box-shadow: 0 0 8px var(--brand-green);"></span>
+            <span style="font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: #B6D95A;">SIMULADOR REACTIVO EN VIVO</span>
+          </div>
+          <button id="btn-print" onclick="window.print()" class="no-print" style="cursor: pointer; border: none; background: var(--brand-blue); color: #FFF; font-family: var(--font-sans); font-weight: 700; font-size: 12px; letter-spacing: .8px; padding: 8px 18px; border-radius: 6px0px; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.25);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="#FFF"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+            REPORTE PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 KPIs Clave en Tiempo Real -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-top: 6px;">
+        <div style="background: rgba(254,254,254,.08); border: 1px solid rgba(255,255,255,.08); border-radius: 6px; padding: 16px 20px; display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px; color: #CCDDFE;">RECAUDO CANAL FLYPASS (<span class="tooltip-text" title="Gross Merchandise Value: Valor total bruto transaccionado o recaudado.">GMV</span>)</span>
+            <span id="badge-share-flypass" style="font-size: 10px; font-weight: 700; color: #B6D95A; background: rgba(149,193,31,.2); padding: 2px 6px; border-radius: 6px;">+35% <span class="tooltip-text" title="Incremento o mejora en métricas clave (ej. aumento de sesiones o margen) gracias a una nueva estrategia.">Uplift</span></span>
+          </div>
+          <span id="kpi-gmv-flypass" style="font-family: var(--font-sans); font-weight: 800; font-size: 26px; color: #FFF; font-variant-numeric: tabular-nums;">$0</span>
+          <span id="kpi-sub-gmv" style="font-family: var(--font-display); font-size: 12px; color: #C4CACA;">0 sesiones B2C (nuevas + migradas)</span>
+        </div>
+
+        <div style="background: rgba(254,254,254,.08); border: 1px solid rgba(255,255,255,.08); border-radius: 6px; padding: 16px 20px; display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px; color: #CCDDFE;">MARGEN BRUTO FLYPASS <span class="tooltip-text" title="e-Mobility Service Provider: Proveedor de servicios de movilidad eléctrica (ej. FlyPass).">eMSP</span></span>
+            <span id="badge-margen-pct" style="font-size: 10px; font-weight: 700; color: #CCDDFE; background: rgba(47,100,192,.35); padding: 2px 6px; border-radius: 6px;">15.0% Margen</span>
+          </div>
+          <span id="kpi-margen-flypass" style="font-family: var(--font-sans); font-weight: 800; font-size: 26px; color: #FFF; font-variant-numeric: tabular-nums;">$0</span>
+          <span id="kpi-sub-margen" style="font-family: var(--font-display); font-size: 12px; color: #C4CACA;">$255 COP retenidos por cada kWh</span>
+        </div>
+
+        <div style="background: rgba(254,254,254,.08); border: 1px solid rgba(255,255,255,.08); border-radius: 6px; padding: 16px 20px; display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px; color: #CCDDFE;">MARGEN BRUTO TOTAL <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span></span>
+            <span id="badge-cpo-gain" style="font-size: 10px; font-weight: 700; color: #B6D95A; background: rgba(149,193,31,.25); padding: 2px 6px; border-radius: 6px;">+0% vs Sin FP</span>
+          </div>
+          <span id="kpi-margen-cpo-total" style="font-family: var(--font-sans); font-weight: 800; font-size: 26px; color: #B6D95A; font-variant-numeric: tabular-nums;">$0</span>
+          <span id="kpi-sub-cpo" style="font-family: var(--font-display); font-size: 12px; color: #C4CACA;">Canal propio (post-<span class="tooltip-text" title="Pasarela de pagos usada típicamente por los CPOs en Colombia, con comisiones rondando el 3.5%.">Pasarela</span> y <span class="tooltip-text" title="Operating Expenses: Gastos operativos (mantenimiento, soporte, cloud, etc.).">OPEX</span>) + Canal FlyPass</span>
+        </div>
+
+        <div style="background: rgba(254,254,254,.08); border: 1px solid rgba(255,255,255,.08); border-radius: 6px; padding: 16px 20px; display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px; color: #CCDDFE;"><span class="tooltip-text" title="Earnings Before Interest, Taxes, Depreciation, and Amortization: Beneficio operativo bruto antes de gastos financieros.">EBITDA</span> MENSUAL FLYPASS</span>
+            <span id="badge-ebitda-status" style="font-size: 10px; font-weight: 700; color: #B6D95A; background: rgba(149,193,31,.2); padding: 2px 6px; border-radius: 6px;">Operación Positiva</span>
+          </div>
+          <span id="kpi-ebitda-flypass" style="font-family: var(--font-sans); font-weight: 800; font-size: 26px; color: #FFF; font-variant-numeric: tabular-nums;">$0</span>
+          <span id="kpi-sub-ebitda" style="font-family: var(--font-display); font-size: 12px; color: #C4CACA;">Tras adquirencia bancos 1.7%, cloud y <span class="tooltip-text" title="Operating Expenses: Gastos operativos (mantenimiento, soporte, cloud, etc.).">OPEX</span></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       CUERPO PRINCIPAL DE LA APLICACIÓN
+       ======================================================================== -->
+  <div style="max-width: 1480px; margin: 0 auto; padding: 26px 36px 64px; display: flex; flex-direction: column; gap: 24px;">
+
+    <!-- ======================================================================
+         LABORATORIO DE SIMULACIÓN INTERACTIVA
+         ====================================================================== -->
+    <div class="card-box">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 4px;">
+        <div style="display: flex; align-items: baseline; gap: 10px;">
+          <span class="badge-tag">LABORATORIO</span>
+          <h2 style="font-weight: 700; font-size: 19px; color: var(--fg-1);">Variables del Ecosistema de Carga B2C</h2>
+        </div>
+        <!-- Casos Hipotéticos de Negocio -->
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 11px; font-weight: 700; color: var(--fg-2);">CASOS HIPOTÉTICOS:</span>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <button class="cpo-pill active" id="btn-preset-startup" onclick="setPresetCase('startup')">Red Naciente (Baja Ocupación)</button>
+            <button class="cpo-pill" id="btn-preset-consolidado" onclick="setPresetCase('consolidado')">Red Consolidada Nacional</button>
+            <button class="cpo-pill" id="btn-preset-urbano" onclick="setPresetCase('urbano')">Hub Urbano Alta Rotación</button>
+            
+            <div style="width: 1px; height: 24px; background: var(--surface-line); margin: 0 4px;"></div>
+            
+            <button onclick="saveCurrentPreset()" class="preset-action-btn" style="border: 1px solid #CBD5E1; background: #F8FAFC; border-radius: 4px; padding: 6px 10px; cursor: pointer; font-size: 11px; font-weight: 600; color: #334155; display: flex; align-items: center; gap: 4px; transition: all .2s;" title="Guardar configuración actual en este preset">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Guardar
+            </button>
+            <button onclick="resetCurrentPreset()" class="preset-action-btn" style="border: 1px solid #CBD5E1; background: #FEF2F2; border-radius: 4px; padding: 6px 10px; cursor: pointer; font-size: 11px; font-weight: 600; color: #EF4444; display: flex; align-items: center; gap: 4px; transition: all .2s;" title="Restaurar valores de fábrica">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg> Reset
+            </button>
+          </div>
+        </div>
+      </div>
+      <p style="font-family: var(--font-display); font-size: 13.5px; color: var(--fg-3); margin-bottom: 22px;">
+        Modifique las variables en tiempo real: explore la repartición de sesiones entre FlyPass y la app del <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span>,
+        el porcentaje de ganancia de FlyPass y observe el <strong>punto óptimo de equilibrio comercial</strong>.
+      </p>
+
+      <!-- Rejilla de Controles (4 Columnas) -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(265px, 1fr)); gap: 24px 30px;">
+        
+        <!-- Columna 1: Tamaño de Red y Precios -->
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="border-bottom: 1px solid var(--surface-line); padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px; color: var(--brand-blue-ink);">TAMAÑO RED Y PRECIOS B2C</span>
+            <span style="font-size: 10px; font-weight: 600; color: var(--fg-3);">Bases de Modelación</span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span style="font-size: 12.5px; font-weight: 600; color: var(--fg-1);">Estaciones Activas</span>
+              <span id="val-estaciones" style="font-size: 13px; font-weight: 700; color: var(--brand-blue-ink);">10</span>
+            </div>
+            <input type="range" id="slider-estaciones" min="2" max="150" step="1" value="10" oninput="updateState('estaciones', this.value)">
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span style="font-size: 12.5px; font-weight: 600; color: var(--fg-1);">Conectores por Estación</span>
+              <span id="val-conectores" style="font-size: 13px; font-weight: 700; color: var(--brand-blue-ink);">2</span>
+            </div>
+            <input type="range" id="slider-conectores" min="1" max="10" step="1" value="2" oninput="updateState('conectoresPorEstacion', this.value)">
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span style="font-size: 12.5px; font-weight: 600; color: var(--fg-1);">Sesiones / conector / día</span>
+              <span id="val-sesiones-dia" style="font-size: 13px; font-weight: 700; color: var(--brand-blue-ink);">3,5</span>
+            </div>
+            <input type="range" id="slider-sesiones-dia" min="0.1" max="20" step="0.1" value="3.5" oninput="updateState('sesionesConectorDia', this.value)">
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span style="font-size: 12.5px; font-weight: 600; color: var(--fg-1);">Energía media por sesión</span>
+              <span id="val-kwh-sesion" style="font-size: 13px; font-weight: 700; color: var(--brand-blue-ink);">25 kWh</span>
+            </div>
+            <input type="range" id="slider-kwh-sesion" min="10" max="65" step="1" value="25" oninput="updateState('kwhSesion', this.value)">
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span style="font-size: 12px; font-weight: 600; color: var(--fg-1);">Tarifa Pública PVP (Paga el usuario)</span>
+              <span id="val-tarifa-pvp" style="font-size: 12.5px; font-weight: 700; color: var(--brand-blue-ink);">$1.800 / kWh</span>
+            </div>
+            <input type="range" id="slider-tarifa-pvp" min="1300" max="2300" step="20" value="1800" oninput="updateState('precioKwh', this.value)">
+          </div>
+
+          <div style="background: #FFF; border-radius: 6px; padding: 6px 10px; font-size: 10.5px; color: var(--fg-2); border: 1px solid #E2E8F0;">
+            <strong>Paridad de precios:</strong> El usuario paga en FlyPass exactamente lo mismo que en el tótem o app nativa del <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span>.
+          </div>
+        </div>
+
+        <!-- Columna 2: Demanda Incremental & Canibalización -->
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="border-bottom: 1px solid #E2E8F0; padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px; color: var(--brand-magenta);">COMPORTAMIENTO DE USUARIOS</span>
+            <span style="font-size: 10px; font-weight: 700; color: var(--brand-magenta);">Dinámica</span>
+          </div>
+
+          <!-- Slider 1: Sesiones Adicionales FlyPass (Uplift) -->
+          <div style="display: flex; flex-direction: column; gap: 5px; background: #FDF4FF; padding: 10px 12px; border-radius: 6px; border: 1px solid #F87171;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span style="font-size: 12px; font-weight: 700; color: #991B1B;">Adquisición Nuevos (<span class="tooltip-text" title="Incremento o mejora en métricas clave (ej. aumento de sesiones o margen) gracias a una nueva estrategia.">Uplift</span>)</span>
+              <span id="val-uplift-fp" style="font-size: 13px; font-weight: 800; color: #DC2626;">+35,0 % Nuevas</span>
+            </div>
+            <input type="range" id="slider-uplift-fp" min="5" max="80" step="1" value="35" oninput="updateState('pctSesionesAdicionales', this.value)">
+            <div style="display: flex; justify-content: space-between; font-size: 10.5px; color: #B91C1C;">
+              <span>Aporte orgánico FlyPass:</span>
+              <strong id="lbl-uplift-sessions">+25.200 ses./mes</strong>
+            </div>
+          </div>
+
+          <!-- Slider 2: Canibalización de Clientes Actuales (Preset 5.0%) -->
+          <div style="display: flex; flex-direction: column; gap: 5px; background: #FFF; padding: 10px 12px; border-radius: 6px; border: 1px solid #E2E8F0;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span style="font-size: 12px; font-weight: 700; color: #334155;"><span class="tooltip-text" title="Migración de clientes propios a otro canal (ej. usuarios del CPO que prefieren usar la App FlyPass).">Canibalización</span> Base <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span></span>
+              <span id="val-canib-fp" style="font-size: 13px; font-weight: 800; color: var(--brand-magenta);">5,0 % Migración</span>
+            </div>
+            <input type="range" id="slider-canib-fp" min="0" max="25" step="0.5" value="5.0" oninput="updateState('pctCanibalizacion', this.value)">
+            <div style="display: flex; justify-content: space-between; font-size: 10.5px; color: #64748B;">
+              <span>Migran a FlyPass por conveniencia:</span>
+              <strong id="lbl-canib-sessions">-3.600 ses./mes</strong>
+            </div>
+          </div>
+
+          <!-- Mini Dashboard de Desglose de Dinámica de Volumen -->
+          <div style="background: rgba(47,100,192,.06); border-radius: 6px; padding: 8px 12px; font-size: 11px; color: var(--brand-blue-ink); line-height: 1.45; border: 1px solid rgba(47,100,192,.15);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+              <span>• Canal App <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> (Base - Canib.):</span>
+              <strong id="lbl-dyn-cpo-sessions">68.400 ses. (70%)</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+              <span>• Canal FlyPass (Nuevas + Migradas):</span>
+              <strong id="lbl-dyn-fp-sessions">28.800 ses. (30%)</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-top: 1px dashed rgba(47,100,192,.3); padding-top: 3px; color: #15803D; font-weight: 700;">
+              <span>= Red <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> Ampliada Total:</span>
+              <strong id="lbl-dyn-total-sessions">97.200 ses. (+35% neto)</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna 3: Economía CPO -->
+        <div style="display: flex; flex-direction: column; gap: 14px; background: #FFFBEB; padding: 14px 18px; border-radius: 6px; border: 1px solid #FDE68A;">
+          <div style="border-bottom: 1px solid #FDE68A; padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px; color: #92400E;">ECONOMÍA DEL CPO</span>
+            <span style="font-size: 10px; font-weight: 700; color: #92400E;">Dueño del Hardware</span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span style="font-size: 12.5px; font-weight: 600; color: #92400E;">Costo Energía Red Eléctrica</span>
+              <span id="val-costo-red" style="font-size: 13px; font-weight: 700; color: #B45309;">$800 / kWh</span>
+            </div>
+            <input type="range" id="slider-costo-red" min="550" max="1150" step="10" value="800" oninput="updateState('costoRedCPO', this.value)">
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 5px; background: #FFF; padding: 10px 12px; border-radius: 6px; border: 1px solid #FDE68A;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span style="font-size: 12px; font-weight: 700; color: #92400E;">Pasarela <span class="tooltip-text" title="Pasarela de pagos usada típicamente por los CPOs en Colombia, con comisiones rondando el 3.5%.">Pasarela</span> App Propia</span>
+              <span id="val-pasarela-cpo" style="font-size: 12.5px; font-weight: 800; color: #B45309;">3,5 % del <span class="tooltip-text" title="Gross Merchandise Value: Valor total bruto transaccionado o recaudado.">GMV</span></span>
+            </div>
+            <input type="range" id="slider-pasarela-cpo" min="2.5" max="4.5" step="0.1" value="3.5" oninput="updateState('pasarelaCPOPct', this.value)">
+            <span style="font-size: 10px; color: #78350F;">Asumida por el <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> en su canal directo.</span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 5px; background: #FFF; padding: 10px 12px; border-radius: 6px; border: 1px solid #FDE68A;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span style="font-size: 12px; font-weight: 700; color: #92400E;"><span class="tooltip-text" title="Operating Expenses: Gastos operativos (mantenimiento, soporte, cloud, etc.).">OPEX</span> <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> (CSMS y Físico)</span>
+              <span id="val-opex-cpo" style="font-size: 12.5px; font-weight: 800; color: #B45309;">10,0 % del <span class="tooltip-text" title="Gross Merchandise Value: Valor total bruto transaccionado o recaudado.">GMV</span></span>
+            </div>
+            <input type="range" id="slider-opex-cpo" min="4.0" max="18.0" step="0.5" value="10.0" oninput="updateState('opexCPOPropioPct', this.value)">
+            <span style="font-size: 10px; color: #78350F;">Ecosistema (CSMS) y físicos.</span>
+          </div>
+
+          <div style="background: rgba(146, 64, 14, 0.1); border-radius: 6px; padding: 8px 12px; font-size: 11px; color: #92400E; line-height: 1.35;">
+            <strong>Canal FlyPass:</strong> El <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> gana <strong id="lbl-cpo-clean-margin">$645/kWh</strong> netos sin pasarelas, asumiendo OPEX físico.
+          </div>
+        </div>
+
+        <!-- Columna 4: Economía FlyPass -->
+        <div style="display: flex; flex-direction: column; gap: 14px; background: #F0FDF4; padding: 14px 18px; border-radius: 6px; border: 1px solid #DCFCE7;">
+          <div style="border-bottom: 1px solid #DCFCE7; padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px; color: var(--brand-green-dark);">ECONOMÍA FLYPASS</span>
+            <span style="font-size: 10px; font-weight: 700; color: var(--brand-green-dark);">Canal eMSP</span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px; padding: 14px; background: rgba(22,163,74,.05); border: 1px solid rgba(22,163,74,.2); border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span style="font-size: 13px; font-weight: 800; color: var(--brand-green-dark);">Margen eMSP FlyPass</span>
+              <span id="val-margen-slider" style="font-size: 14px; font-weight: 800; color: var(--brand-green-dark);">10,0 %</span>
+            </div>
+            <input type="range" id="slider-margen-flypass" min="5" max="30" step="0.5" value="10" oninput="updateState('margenFlypassPct', this.value)" style="accent-color: var(--brand-green-dark);">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--brand-green-dark);">
+              <span>Neto bruto: <strong id="lbl-unit-margin">$255/kWh</strong></span>
+              <span><span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> liquida: <strong id="lbl-unit-wholesale">$1.445/kWh</strong></span>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 5px; background: #FFF; padding: 10px 12px; border-radius: 6px; border: 1px solid #DCFCE7;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span style="font-size: 12px; font-weight: 700; color: var(--brand-green-dark);">Adquirencia Bancaria</span>
+              <span id="val-adquirencia-fp" style="font-size: 12.5px; font-weight: 800; color: var(--brand-green-dark);">1,7 % del <span class="tooltip-text" title="Gross Merchandise Value: Valor total bruto transaccionado o recaudado.">GMV</span></span>
+            </div>
+            <input type="range" id="slider-adquirencia-fp" min="1.0" max="2.5" step="0.1" value="1.7" oninput="updateState('adquirenciaFlypassPct', this.value)">
+            <span style="font-size: 10.5px; color: #166534;">Tarifa masiva bancaria.</span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 5px; background: #FFF; padding: 10px 12px; border-radius: 6px; border: 1px solid #DCFCE7;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span style="font-size: 12px; font-weight: 700; color: var(--brand-green-dark);">Costo Cloud <span class="tooltip-text" title="Open Charge Point Interface: Protocolo estándar (ej. v2.2.1) para roaming entre eMSPs y CPOs.">OCPI</span> 2.2.1</span>
+              <span id="val-cloud" style="font-size: 12.5px; font-weight: 800; color: var(--brand-green-dark);">$350 / sesión</span>
+            </div>
+            <input type="range" id="slider-cloud" min="150" max="800" step="25" value="350" oninput="updateState('costoCloudOcpiPorSesion', this.value)">
+            <span style="font-size: 10.5px; color: #166534;">Transacciones de roaming.</span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 5px; background: #FFF; padding: 10px 12px; border-radius: 6px; border: 1px solid #DCFCE7;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span style="font-size: 12px; font-weight: 700; color: var(--brand-green-dark);"><span class="tooltip-text" title="Operating Expenses: Gastos operativos (mantenimiento, soporte, cloud, etc.).">OPEX</span> Soporte 24/7</span>
+              <span id="val-opex" style="font-size: 12.5px; font-weight: 800; color: var(--brand-green-dark);">$1,0 MM / mes</span>
+            </div>
+            <input type="range" id="slider-opex" min="500000" max="10000000" step="500000" value="1000000" oninput="updateState('opexSoporteFlypass', this.value)">
+            <span style="font-size: 10.5px; color: #166534;">Call center omnicanal.</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- DASHBOARD DE INFRAESTRUCTURA Y OCUPACIÓN (Dashboard) -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 24px;">
+        
+        <!-- Bloque 1: Infraestructura y Capacidad de Servicio -->
+        <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 18px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+          <h3 style="font-size: 13px; font-weight: 700; color: var(--brand-blue-ink); margin-top: 0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            INFRAESTRUCTURA Y CAPACIDAD
+          </h3>
+          <div style="display: flex; gap: 14px;">
+            <div style="flex: 1; background: #F8FAFC; border-radius: 6px; padding: 12px; text-align: center; border: 1px solid #E2E8F0;">
+              <div style="font-size: 24px; font-weight: 800; color: var(--brand-blue-ink);" id="dash-conectores">0</div>
+              <div style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Conectores Totales</div>
+            </div>
+            <div style="flex: 1; background: #F8FAFC; border-radius: 6px; padding: 12px; text-align: center; border: 1px solid #E2E8F0;">
+              <div style="font-size: 24px; font-weight: 800; color: var(--brand-blue-ink);" id="dash-capacidad-sesiones">0</div>
+              <div style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Capacidad (Ses/mes)</div>
+              <div style="font-size: 9px; color: #94A3B8; margin-top: 4px;">*Basado en máx. 15 ses./conector</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloque 2: Nivel de Ocupación -->
+        <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 18px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+          <h3 style="font-size: 13px; font-weight: 700; color: var(--brand-blue-ink); margin-top: 0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              NIVEL DE OCUPACIÓN DE RED
+            </div>
+            <div style="font-size: 18px; font-weight: 800; color: #16A34A;" id="dash-ocupacion-pct">0%</div>
+          </h3>
+          
+          <!-- Barra de progreso Stacked -->
+          <div style="width: 100%; height: 24px; background: #E2E8F0; border-radius: 12px; overflow: hidden; display: flex; margin-bottom: 12px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
+            <div id="bar-ocupacion-cpo" style="height: 100%; background: #92400E; width: 0%; transition: width 0.3s ease;"></div>
+            <div id="bar-ocupacion-fp" style="height: 100%; background: #16A34A; width: 0%; transition: width 0.3s ease; position: relative;">
+              <!-- Trama de Flypass -->
+              <div style="position: absolute; inset: 0; background: linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.15) 75%, transparent 75%, transparent); background-size: 1rem 1rem;"></div>
+            </div>
+          </div>
+          
+          <!-- Leyenda -->
+          <div style="display: flex; justify-content: space-between; font-size: 10.5px; font-weight: 600;">
+            <div style="display: flex; align-items: center; gap: 6px; color: #92400E;">
+              <div style="width: 8px; height: 8px; border-radius: 2px; background: #92400E;"></div>
+              Base CPO: <span id="lbl-ocupacion-cpo">0%</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; color: #16A34A;">
+              <div style="width: 8px; height: 8px; border-radius: 2px; background: #16A34A;"></div>
+              Aporte FlyPass: <span id="lbl-ocupacion-fp">+0%</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; color: #64748B;">
+              <div style="width: 8px; height: 8px; border-radius: 2px; background: #E2E8F0; border: 1px solid #CBD5E1;"></div>
+              Ociosa
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Banner de Insights Automáticos de Negocio -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 14px 18px; margin-top: 24px;">
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <div style="width: 22px; height: 22px; border-radius: 6px; background: var(--brand-blue); display: flex; align-items: center; justify-content: center; flex: none; color: #FFF; font-size: 11px; font-weight: 700;">1</div>
+          <span id="insight-1" style="font-family: var(--font-display); font-size: 12.5px; line-height: 1.45; color: var(--fg-1);">...</span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <div style="width: 22px; height: 22px; border-radius: 6px; background: var(--brand-green-dark); display: flex; align-items: center; justify-content: center; flex: none; color: #FFF; font-size: 11px; font-weight: 700;">2</div>
+          <span id="insight-2" style="font-family: var(--font-display); font-size: 12.5px; line-height: 1.45; color: var(--brand-blue-ink);">...</span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <div style="width: 22px; height: 22px; border-radius: 6px; background: var(--brand-magenta); display: flex; align-items: center; justify-content: center; flex: none; color: #FFF; font-size: 11px; font-weight: 700;">3</div>
+          <span id="insight-3" style="font-family: var(--font-display); font-size: 12.5px; line-height: 1.45; color: var(--brand-magenta-ink);">...</span>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ======================================================================
+         SECCIÓN 01: EL VIAJE DEL CONDUCTOR NATURAL (CUSTOMER JOURNEY CON FLYPASS)
+         ====================================================================== -->
+    <div class="card-box">
+      <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 2px;">
+        <span class="badge-tag">01 · EXPERIENCIA B2C</span>
+        <h2 style="font-weight: 700; font-size: 18px; color: var(--fg-1);">El Viaje del Usuario Natural: App FlyPass & Protocolo <span class="tooltip-text" title="Open Charge Point Interface: Protocolo estándar (ej. v2.2.1) para roaming entre eMSPs y CPOs.">OCPI</span> 2.2.1</h2>
+      </div>
+      <p style="font-family: var(--font-display); font-size: 13.5px; color: var(--fg-3); margin-bottom: 18px;">
+        Cómo un conductor particular de vehículo eléctrico interactúa con la aplicación de FlyPass para cargar en cualquier red de <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> sin fricciones.
+      </p>
+
+      <!-- 5 Pasos Visuales del Customer Journey -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 10px; font-weight: 800; color: var(--brand-blue); background: var(--brand-blue-tint); padding: 2px 7px; border-radius: 6px;">PASO 1</span>
+            <span style="font-size: 10px; font-weight: 700; color: #64748B;"><span class="tooltip-text" title="Open Charge Point Interface: Protocolo estándar (ej. v2.2.1) para roaming entre eMSPs y CPOs.">OCPI</span> Locations</span>
+          </div>
+          <h3 style="font-size: 14px; font-weight: 700; color: var(--brand-blue-ink);">Descubrimiento en FlyMap</h3>
+          <p style="font-family: var(--font-display); font-size: 12px; color: var(--fg-2); line-height: 1.4;">
+            El conductor abre FlyPass y ve todas las estaciones cercanas (Terpel, Enel, Celsia, EPM) con disponibilidad en vivo de conectores (CCS2, Tipo 1/2) y tarifas transparentes.
+          </p>
+        </div>
+
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 10px; font-weight: 800; color: var(--brand-blue); background: var(--brand-blue-tint); padding: 2px 7px; border-radius: 6px;">PASO 2</span>
+            <span style="font-size: 10px; font-weight: 700; color: #64748B;"><span class="tooltip-text" title="Open Charge Point Interface: Protocolo estándar (ej. v2.2.1) para roaming entre eMSPs y CPOs.">OCPI</span> Commands</span>
+          </div>
+          <h3 style="font-size: 14px; font-weight: 700; color: var(--brand-blue-ink);">Autenticación e Inicio</h3>
+          <p style="font-family: var(--font-display); font-size: 12px; color: var(--fg-2); line-height: 1.4;">
+            Llega a la electrolinera, conecta el cable y escanea el código QR desde la App FlyPass (o acerca su Tag RFID FlyPass). El <span class="tooltip-text" title="e-Mobility Service Provider: Proveedor de servicios de movilidad eléctrica (ej. FlyPass).">eMSP</span> autoriza la carga al <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> en milisegundos.
+          </p>
+        </div>
+
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 10px; font-weight: 800; color: var(--brand-blue); background: var(--brand-blue-tint); padding: 2px 7px; border-radius: 6px;">PASO 3</span>
+            <span style="font-size: 10px; font-weight: 700; color: #64748B;"><span class="tooltip-text" title="Open Charge Point Interface: Protocolo estándar (ej. v2.2.1) para roaming entre eMSPs y CPOs.">OCPI</span> Sessions</span>
+          </div>
+          <h3 style="font-size: 14px; font-weight: 700; color: var(--brand-blue-ink);">Telemetría en Tiempo Real</h3>
+          <p style="font-family: var(--font-display); font-size: 12px; color: var(--fg-2); line-height: 1.4;">
+            El cargador del <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> dispensa los electrones. FlyPass recibe lecturas continuas del medidor y muestra en pantalla los kWh suministrados, tiempo transcurrido y costo acumulado.
+          </p>
+        </div>
+
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 10px; font-weight: 800; color: var(--brand-blue); background: var(--brand-blue-tint); padding: 2px 7px; border-radius: 6px;">PASO 4</span>
+            <span style="font-size: 10px; font-weight: 700; color: #64748B;"><span class="tooltip-text" title="Open Charge Point Interface: Protocolo estándar (ej. v2.2.1) para roaming entre eMSPs y CPOs.">OCPI</span> <span class="tooltip-text" title="Charge Detail Record: Registro inmutable y detallado de la sesión de carga usado para facturación.">CDRs</span></span>
+          </div>
+          <h3 style="font-size: 14px; font-weight: 700; color: var(--brand-blue-ink);">Emisión Inmutable de <span class="tooltip-text" title="Charge Detail Record: Registro inmutable y detallado de la sesión de carga usado para facturación.">CDR</span></h3>
+          <p style="font-family: var(--font-display); font-size: 12px; color: var(--fg-2); line-height: 1.4;">
+            Al desconectar el cable, el CSMS del <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> empaqueta el <span class="tooltip-text" title="Charge Detail Record: Registro inmutable y detallado de la sesión de carga usado para facturación.">CDR</span> (Charge Detail Record) con energía exacta y marcas de tiempo, enviándolo cifrado a los servidores de FlyPass.
+          </p>
+        </div>
+
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 10px; font-weight: 800; color: var(--brand-green-dark); background: var(--brand-green-soft); padding: 2px 7px; border-radius: 6px;">PASO 5</span>
+            <span style="font-size: 10px; font-weight: 700; color: #64748B;">Clearing B2B</span>
+          </div>
+          <h3 style="font-size: 14px; font-weight: 700; color: var(--brand-blue-ink);">Cobro y Liquidación Mayorista</h3>
+          <p style="font-family: var(--font-display); font-size: 12px; color: var(--fg-2); line-height: 1.4;">
+            FlyPass debita el PVP al usuario de su saldo/tarjeta. Al cierre mensual, FlyPass consolida todos los <span class="tooltip-text" title="Charge Detail Record: Registro inmutable y detallado de la sesión de carga usado para facturación.">CDRs</span> y transfiere al <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> el valor mayorista, reteniendo su 15% de margen.
+          </p>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ======================================================================
+         SECCIÓN 02: ANÁLISIS DE PUNTO ÓPTIMO CPO VS FLYPASS (SWEET SPOT)
+         ====================================================================== -->
+    <div class="card-box" style="border: 2px solid #CCDDFE; background: linear-gradient(180deg, #FFF 0%, #F8FAFC 100%);">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 2px;">
+        <div style="display: flex; align-items: baseline; gap: 10px;">
+          <span class="badge-tag">02 · ANÁLISIS ESTRATÉGICO</span>
+          <h2 style="font-weight: 700; font-size: 18px; color: var(--brand-blue-ink);">Punto Óptimo de Equilibrio Comercial: <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> vs. FlyPass (Sweet Spot)</h2>
+        </div>
+        <span style="font-size: 11.5px; font-weight: 700; color: var(--brand-blue); background: var(--brand-blue-tint); padding: 4px 10px; border-radius: 6px;">
+          Equilibrio de Nash / Win-Win
+        </span>
+      </div>
+      <p style="font-family: var(--font-display); font-size: 13.5px; color: var(--fg-3); margin-bottom: 18px;">
+        El <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> necesita maximizar la utilización de sus cargadores para pagar su alto CAPEX de hardware y red, mientras que FlyPass necesita un margen suficiente para absorber pasarelas y soporte.
+        Vea cómo interactúan las curvas de rentabilidad al variar el descuento mayorista.
+      </p>
+
+      <!-- Rejilla con Gráfica de Curvas + Métricas de Equilibrio -->
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: center;" id="sweet-spot-container">
+        
+        <!-- Gráfica SVG de Sensibilidad -->
+        <div style="background: #FFF; border: 1px solid #E2E8F0; border-radius: 6px; padding: 18px; position: relative;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 11px; font-weight: 700; color: var(--fg-2);">CURVA DE SENSIBILIDAD POR % DE DESCUENTO MAYORISTA A FLYPASS</span>
+            <div style="display: flex; gap: 14px; font-size: 10.5px; font-weight: 600;">
+              <span style="color: var(--brand-green-dark); display: flex; align-items: center; gap: 5px;">
+                <span style="width: 10px; height: 3px; background: var(--brand-green-dark); display: inline-block;"></span> <span class="tooltip-text" title="Earnings Before Interest, Taxes, Depreciation, and Amortization: Beneficio operativo bruto antes de gastos financieros.">EBITDA</span> FlyPass (%)
+              </span>
+              <span style="color: #D97706; display: flex; align-items: center; gap: 5px;">
+                <span style="width: 10px; height: 3px; background: #D97706; display: inline-block;"></span> Margen Bruto <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> ($/kWh)
+              </span>
+            </div>
+          </div>
+
+          <svg id="svg-sweet-spot" viewBox="0 0 650 240" style="width: 100%; height: auto; display: block; overflow: visible;">
+            <!-- Renderizado dinámico vía JavaScript -->
+          </svg>
+
+          <div style="display: flex; justify-content: space-between; font-size: 10.5px; color: var(--fg-3); margin-top: 6px; font-family: var(--font-sans);">
+            <span>5% (Insuficiente para FlyPass)</span>
+            <span style="color: var(--brand-blue); font-weight: 700;">ZONA ÓPTIMA RECOMENDADA (8% - 12%)</span>
+            <span>30% (Erosión margen <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span>)</span>
+          </div>
+        </div>
+
+        <!-- Tarjeta de Diagnóstico del Punto Óptimo -->
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="background: #FFF; border-radius: 6px; border: 1px solid #E2E8F0; padding: 14px 16px;">
+            <span style="font-size: 10.5px; font-weight: 700; color: var(--fg-2); letter-spacing: 1px;">ESTADO DEL ACUERDO COMERCIAL</span>
+            <div id="status-deal-box" style="margin-top: 4px; font-size: 15px; font-weight: 800; color: var(--brand-blue);">
+              PUNTO ÓPTIMO ALCANZADO
+            </div>
+            <p id="status-deal-desc" style="font-family: var(--font-display); font-size: 12px; color: var(--fg-2); margin-top: 4px; line-height: 1.4;">
+              Con 15% de margen, FlyPass genera 7.8% de <span class="tooltip-text" title="Earnings Before Interest, Taxes, Depreciation, and Amortization: Beneficio operativo bruto antes de gastos financieros.">EBITDA</span> neto y el <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> gana $645/kWh sin costos de pasarela ni soporte.
+            </p>
+          </div>
+
+          <div style="background: #FFF; border-radius: 6px; border: 1px solid #E2E8F0; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; font-size: 12px;">
+              <span style="color: var(--fg-2);">Margen Unitario FlyPass:</span>
+              <strong id="card-unit-fp" style="color: var(--brand-green-dark);">$255 / kWh</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px;">
+              <span style="color: var(--fg-2);">Margen Unitario <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> (Canal FP):</span>
+              <strong id="card-unit-cpo" style="color: #D97706;">$645 / kWh</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px; border-top: 1px dashed #E2E8F0; padding-top: 6px;">
+              <span style="color: var(--fg-2);">Aporte Volumen FlyPass:</span>
+              <strong id="card-vol-fp" style="color: var(--brand-blue);">960.000 kWh/mes</strong>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- ======================================================================
+         SECCIÓN 03: DIAGRAMA SANKEY DEL FLUJO DEL DINERO B2C
+         ====================================================================== -->
+    <div class="card-box">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 2px;">
+        <div style="display: flex; align-items: baseline; gap: 10px;">
+          <span class="badge-tag">03 · NÚCLEO FINANCIERO</span>
+          <h2 style="font-weight: 700; font-size: 18px; color: var(--fg-1);">
+            ¿Cómo se distribuye cada peso pagado por el conductor en Colombia?
+          </h2>
+        </div>
+        <span style="font-size: 11.5px; font-weight: 600; color: var(--fg-2);">Pase el cursor sobre cualquier nodo o flujo para aislarlo</span>
+      </div>
+      <p style="font-family: var(--font-display); font-size: 13.5px; color: var(--fg-3); margin-bottom: 16px;">
+        Representación gráfica integral: compara el flujo que transita por la <strong>App de FlyPass</strong> (con descuento mayorista, adquirencia bancaria del 1.7% y <span class="tooltip-text" title="Earnings Before Interest, Taxes, Depreciation, and Amortization: Beneficio operativo bruto antes de gastos financieros.">EBITDA</span>) 
+        frente al flujo que transita por la <strong>App propia del <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span></strong> (con pasarela <span class="tooltip-text" title="Pasarela de pagos usada típicamente por los CPOs en Colombia, con comisiones rondando el 3.5%.">Pasarela</span> del 3.5% y costo de red).
+      </p>
+
+      <!-- BALANCE CONCLUYENTE DE MÁRGENES BRUTOS (FLYPASS VS CPO) -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 16px; margin-bottom: 20px;">
+        
+        <!-- Tarjeta Margen Bruto FlyPass -->
+        <div style="background: #EFF6FF; border: 2px solid #2563EB; border-radius: 6px; padding: 18px 22px; display: flex; flex-direction: column; gap: 8px; ">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11px; font-weight: 800; letter-spacing: 1.2px; color: #1E40AF;">MARGEN BRUTO FLYPASS <span class="tooltip-text" title="e-Mobility Service Provider: Proveedor de servicios de movilidad eléctrica (ej. FlyPass).">eMSP</span></span>
+            <span id="card-tag-margen-fp" style="font-size: 11px; font-weight: 800; background: #DBEAFE; color: #1D4ED8; padding: 2px 8px; border-radius: 6px;">15.0% de su <span class="tooltip-text" title="Gross Merchandise Value: Valor total bruto transaccionado o recaudado.">GMV</span></span>
+          </div>
+          <div style="display: flex; align-items: baseline; gap: 10px;">
+            <span id="box-margen-bruto-fp" style="font-family: var(--font-sans); font-weight: 800; font-size: 28px; color: #1E3A8A; font-variant-numeric: tabular-nums;">$0</span>
+            <span id="box-margen-unit-fp" style="font-size: 13px; font-weight: 700; color: #2563EB;">($255 / kWh)</span>
+          </div>
+          <p style="font-family: var(--font-display); font-size: 12px; color: #475569; line-height: 1.4;">
+            Ingreso bruto retenido por FlyPass por originación digital, software y asunción de riesgo crediticio del conductor.
+          </p>
+          <div style="background: rgba(255,255,255,.8); border-radius: 6px; padding: 8px 12px; font-size: 11.5px; color: #1E3A8A; display: flex; justify-content: space-between;">
+            <span>(-) Adquirencia Bancos (1.7%) + Cloud + <span class="tooltip-text" title="Operating Expenses: Gastos operativos (mantenimiento, soporte, cloud, etc.).">OPEX</span>:</span>
+            <strong id="box-costos-fp">$0</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 800; color: #15803D; border-top: 1px dashed #93C5FD; padding-top: 6px;">
+            <span><span class="tooltip-text" title="Earnings Before Interest, Taxes, Depreciation, and Amortization: Beneficio operativo bruto antes de gastos financieros.">EBITDA</span> Neto FlyPass:</span>
+            <span id="box-ebitda-fp">$0</span>
+          </div>
+        </div>
+
+        <!-- Tarjeta Margen Bruto CPO -->
+        <div style="background: #F0FDF4; border: 2px solid #16A34A; border-radius: 6px; padding: 18px 22px; display: flex; flex-direction: column; gap: 8px; ">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11px; font-weight: 800; letter-spacing: 1.2px; color: #166534;">MARGEN BRUTO TOTAL DEL <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> (ECOSISTEMA)</span>
+            <span id="card-tag-margen-cpo" style="font-size: 11px; font-weight: 800; background: #DCFCE7; color: #15803D; padding: 2px 8px; border-radius: 6px;">+0% vs Operar Solo</span>
+          </div>
+          <div style="display: flex; align-items: baseline; gap: 10px;">
+            <span id="box-margen-bruto-cpo" style="font-family: var(--font-sans); font-weight: 800; font-size: 28px; color: #14532D; font-variant-numeric: tabular-nums;">$0</span>
+            <span id="box-margen-unit-cpo" style="font-size: 13px; font-weight: 700; color: #15803D;">(Ambos Canales)</span>
+          </div>
+          <p style="font-family: var(--font-display); font-size: 12px; color: #475569; line-height: 1.4;">
+            Utilidad neta que el <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> genera en sus cargadores. Demuestra que el <strong>volumen incremental de FlyPass</strong> compensa con creces el 5% de <span class="tooltip-text" title="Migración de clientes propios a otro canal (ej. usuarios del CPO que prefieren usar la App FlyPass).">canibalización</span>.
+          </p>
+          <div style="background: rgba(255,255,255,.85); border-radius: 6px; padding: 8px 12px; font-size: 11.5px; color: #14532D; display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span>• Canal Propio (post-<span class="tooltip-text" title="Pasarela de pagos usada típicamente por los CPOs en Colombia, con comisiones rondando el 3.5%.">Pasarela</span> 3.5%, <span class="tooltip-text" title="Operating Expenses: Gastos operativos (mantenimiento, soporte, cloud, etc.).">OPEX</span> <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> 10% y energía red):</span>
+              <strong id="box-cpo-margin-direct">$0</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; color: #15803D;">
+              <span>• Canal FlyPass (Liquidación mayorista - energía red - <strong>OPEX CPO <span id="lbl-opex-fp-text">10</span>%</strong>):</span>
+              <strong id="box-cpo-margin-fp">$0</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-top: 1px dashed #86EFAC; padding-top: 4px; color: #166534; font-weight: 700;">
+              <span>Ganancia Neta Incremental vs Operar Solo:</span>
+              <strong id="box-cpo-gain-net">$0 (+0%)</strong>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Selector de Vista Sankey -->
+      <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+        <span style="font-size: 11px; font-weight: 700; color: var(--fg-2); align-self: center;">VISTA DE FLUJO:</span>
+        <button class="cpo-pill active" id="btn-sankey-total" onclick="setSankeyView('total')">1. Ecosistema Total</button>
+        <button class="cpo-pill" id="btn-sankey-flypass" onclick="setSankeyView('flypass')">2. Solo Canal FlyPass</button>
+        <button class="cpo-pill" id="btn-sankey-cpo" onclick="setSankeyView('cpo')">3. Solo Canal CPO</button>
+      </div>
+
+      <!-- Leyenda de Colores del Sankey -->
+      <div style="display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 12px;">
+        <span style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--fg-1);"><span style="width: 10px; height: 10px; border-radius: 2px; background: #1E3A8A;"></span>Recaudo Total Mercado (<span class="tooltip-text" title="Gross Merchandise Value: Valor total bruto transaccionado o recaudado.">GMV</span>)</span>
+        <span style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--fg-1);"><span style="width: 10px; height: 10px; border-radius: 2px; background: #2563EB;"></span>Canal App FlyPass (<span class="tooltip-text" title="e-Mobility Service Provider: Proveedor de servicios de movilidad eléctrica (ej. FlyPass).">eMSP</span>)</span>
+        <span style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--fg-1);"><span style="width: 10px; height: 10px; border-radius: 2px; background: #7C3AED;"></span>Canal App Propia <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span></span>
+        <span style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--fg-1);"><span style="width: 10px; height: 10px; border-radius: 2px; background: #3B82F6;"></span>Margen Bruto FlyPass</span>
+        <span style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--fg-1);"><span style="width: 10px; height: 10px; border-radius: 2px; background: #15803D;"></span>Margen Bruto <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> (Ambos Canales)</span>
+        <span style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--fg-1);"><span style="width: 10px; height: 10px; border-radius: 2px; background: #BD185C;"></span>Adquirencia Bancos FlyPass (~1.7%)</span>
+        <span style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--fg-1);"><span style="width: 10px; height: 10px; border-radius: 2px; background: #8B5CF6;"></span>Pasarela <span class="tooltip-text" title="Pasarela de pagos usada típicamente por los CPOs en Colombia, con comisiones rondando el 3.5%.">Pasarela</span> <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> (3.5%)</span>
+        <span style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--fg-1);"><span style="width: 10px; height: 10px; border-radius: 2px; background: #D97706;"></span><span class="tooltip-text" title="Operating Expenses: Gastos operativos (mantenimiento, soporte, cloud, etc.).">OPEX</span> Operativo <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> (~10%)</span>
+        <span style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--fg-1);"><span style="width: 10px; height: 10px; border-radius: 2px; background: #16A34A;"></span><span class="tooltip-text" title="Earnings Before Interest, Taxes, Depreciation, and Amortization: Beneficio operativo bruto antes de gastos financieros.">EBITDA</span> Final FlyPass</span>
+      </div>
+
+      <!-- Lienzo SVG del Diagrama Sankey Financiero -->
+      <div data-scroll="true" style="border: 1px solid #E2E8F0; border-radius: 6px; background: #FFF; padding: 10px 0;">
+        <div style="min-width: 980px; position: relative;">
+          <svg id="svg-sankey-money" viewBox="0 0 1000 620" style="width: 100%; height: auto; display: block;">
+            <!-- Renderizado dinámico vía JavaScript -->
+          </svg>
+          <div id="sankey-labels-container">
+            <!-- Etiquetas HTML posicionadas sobre el Sankey -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjeta Interactiva con Explicación Detallada al hacer Hover -->
+      <div id="hover-card-info" style="display: flex; gap: 14px; align-items: flex-start; background: #EFF5FF; border-radius: 6px; padding: 14px 18px; margin-top: 14px; border: 1px solid #BFDBFE; transition: all .2s;">
+        <div id="hover-card-icon" style="flex: none; width: 28px; height: 28px; border-radius: 6px; background: var(--brand-blue); display: flex; align-items: center; justify-content: center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFF"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px;">
+          <span id="hover-card-title" style="font-family: var(--font-sans); font-weight: 700; font-size: 14px; color: var(--brand-blue-ink);">
+            Recorra el diagrama con el cursor
+          </span>
+          <span id="hover-card-desc" style="font-family: var(--font-display); font-size: 12.8px; line-height: 1.45; color: var(--fg-1);">
+            Toque o pase el cursor sobre cualquier nodo o rama para conocer su valor en pesos colombianos, porcentaje sobre el total y su fundamento legal/operativo bajo <span class="tooltip-text" title="Open Charge Point Interface: Protocolo estándar (ej. v2.2.1) para roaming entre eMSPs y CPOs.">OCPI</span> 2.2.1.
+          </span>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ======================================================================
+         SECCIÓN 04: CASCADA FINANCIERA (WATERFALL CHART FLYPASS)
+         ====================================================================== -->
+    <div class="card-box">
+      <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 2px;">
+        <span class="badge-tag">04 · ESTADO DE RESULTADOS</span>
+        <h2 style="font-weight: 700; font-size: 18px; color: var(--fg-1);">Cascada Financiera Mensual de FlyPass <span class="tooltip-text" title="e-Mobility Service Provider: Proveedor de servicios de movilidad eléctrica (ej. FlyPass).">eMSP</span> (Waterfall)</h2>
+      </div>
+      <p style="font-family: var(--font-display); font-size: 13.5px; color: var(--fg-3); margin-bottom: 16px;">
+        Visualización secuencial: desde el recaudo bruto abonado por los usuarios en la app, descontando liquidación mayorista a CPOs, pasarela y <span class="tooltip-text" title="Operating Expenses: Gastos operativos (mantenimiento, soporte, cloud, etc.).">OPEX</span> hasta el <span class="tooltip-text" title="Earnings Before Interest, Taxes, Depreciation, and Amortization: Beneficio operativo bruto antes de gastos financieros.">EBITDA</span> neto.
+      </p>
+
+      <div data-scroll="true">
+        <div style="min-width: 800px; padding: 10px 0;">
+          <div id="waterfall-bars-container" style="position: relative; height: 260px; display: flex; gap: 14px; align-items: flex-end; border-bottom: 2px solid #E2E8F0; padding-bottom: 2px;">
+            <!-- Barras del Waterfall generadas dinámicamente -->
+          </div>
+          <div id="waterfall-labels-row" style="display: flex; gap: 14px; margin-top: 12px;">
+            <!-- Etiquetas del Waterfall generadas dinámicamente -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ======================================================================
+         SECCIÓN 05: PROYECCIÓN A 5 AÑOS (ECONOMÍA ASSET-LIGHT)
+         ====================================================================== -->
+    <div class="card-box">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 2px;">
+        <div style="display: flex; align-items: baseline; gap: 10px;">
+          <span class="badge-tag">05 · RETORNO DE INVERSIÓN</span>
+          <h2 style="font-weight: 700; font-size: 18px; color: var(--fg-1);">Proyección Financiera a 5 Años: La Ventaja Asset-Light de FlyPass</h2>
+        </div>
+        <span style="font-size: 11.5px; font-weight: 700; color: var(--brand-magenta); background: rgba(189,24,92,.1); padding: 4px 10px; border-radius: 6px;">
+          Cero CAPEX en Cargadores Físicos
+        </span>
+      </div>
+      <p style="font-family: var(--font-display); font-size: 13.5px; color: var(--fg-3); margin-bottom: 18px;">
+        Un <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> requiere miles de millones de pesos en transformadores, obra civil y cargadores que tardan 6 a 8 años en amortizarse. 
+        FlyPass opera como <span class="tooltip-text" title="e-Mobility Service Provider: Proveedor de servicios de movilidad eléctrica (ej. FlyPass).">eMSP</span> con un CAPEX de software e integración ágil, logrando un retorno exponencial.
+      </p>
+
+      <!-- 4 Métricas de Inversión -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px;">
+        <div style="background: #F8FAFC; border-radius: 6px; padding: 14px 18px; border: 1px solid #E2E8F0;">
+          <span style="font-size: 10.5px; font-weight: 700; color: var(--fg-2); letter-spacing: .8px;">CAPEX DE INTEGRACIÓN</span>
+          <div id="proj-capex" style="font-size: 20px; font-weight: 800; color: var(--brand-blue-ink); margin-top: 2px;">$180 MM</div>
+          <span style="font-size: 11px; color: var(--fg-3);">Software <span class="tooltip-text" title="Open Charge Point Interface: Protocolo estándar (ej. v2.2.1) para roaming entre eMSPs y CPOs.">OCPI</span> 2.2.1 & App</span>
+        </div>
+
+        <div style="background: #F8FAFC; border-radius: 6px; padding: 14px 18px; border: 1px solid #E2E8F0;">
+          <span style="font-size: 10.5px; font-weight: 700; color: var(--fg-2); letter-spacing: .8px;">VPN A 5 AÑOS (TASA 14%)</span>
+          <div id="proj-vpn" style="font-size: 20px; font-weight: 800; color: var(--brand-green-dark); margin-top: 2px;">$0</div>
+          <span style="font-size: 11px; color: var(--fg-3);">Valor Presente Neto</span>
+        </div>
+
+        <div style="background: #F8FAFC; border-radius: 6px; padding: 14px 18px; border: 1px solid #E2E8F0;">
+          <span style="font-size: 10.5px; font-weight: 700; color: var(--fg-2); letter-spacing: .8px;">TIR (TASA INTERNA RETORNO)</span>
+          <div id="proj-tir" style="font-size: 20px; font-weight: 800; color: var(--brand-blue); margin-top: 2px;">0%</div>
+          <span style="font-size: 11px; color: var(--fg-3);">Retorno de capital anualizado</span>
+        </div>
+
+        <div style="background: #F8FAFC; border-radius: 6px; padding: 14px 18px; border: 1px solid #E2E8F0;">
+          <span style="font-size: 10.5px; font-weight: 700; color: var(--fg-2); letter-spacing: .8px;">PAYBACK ESTIMADO</span>
+          <div id="proj-payback" style="font-size: 20px; font-weight: 800; color: var(--brand-green-dark); margin-top: 2px;">0 meses</div>
+          <span style="font-size: 11px; color: var(--fg-3);">Recuperación total de inversión</span>
+        </div>
+      </div>
+
+      <!-- Gráfico de Flujo Acumulado a 5 Años -->
+      <div style="position: relative; background: #FFF; border: 1px solid #E2E8F0; border-radius: 6px; padding: 18px;">
+        <span style="font-size: 11px; font-weight: 700; color: var(--fg-2);">FLUJO DE CAJA ACUMULADO (AÑOS 1 A 5 EN MILLONES COP)</span>
+        <svg id="svg-projection" viewBox="0 0 800 180" style="width: 100%; height: auto; display: block; margin-top: 8px;">
+          <!-- Curva y área generada dinámicamente -->
+        </svg>
+      </div>
+    </div>
+
+
+    <!-- ======================================================================
+         SECCIÓN 06: ARGUMENTARIO EJECUTIVO PARA STAKEHOLDERS Y CPOS
+         ====================================================================== -->
+    <div class="card-box" style="background: var(--brand-navy-2); color: #FFF;">
+      <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px;">
+        <span style="color: #B6D95A; font-weight: 800; font-size: 11px; letter-spacing: 1.5px;">06 · ESTRATEGIA CORPORATIVA</span>
+        <h2 style="font-weight: 700; font-size: 19px; color: #FFF;">¿Por qué un <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> (Terpel, Enel, Celsia) necesita a FlyPass?</h2>
+      </div>
+      <p style="font-family: var(--font-display); font-size: 13.5px; color: #C4CACA; margin-bottom: 20px;">
+        Guía de conversación para la mesa de negociación entre FlyPass y los Operadores de Puntos de Carga en Colombia.
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+        <div style="background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 6px; padding: 16px;">
+          <div style="color: var(--brand-green); font-size: 13px; font-weight: 700; margin-bottom: 4px;">1. Aceleración del Repago de CAPEX (Monetización Ociosa)</div>
+          <p style="font-size: 12.5px; color: #CBD5E1; line-height: 1.45;">
+            El hardware y la red eléctrica son un costo hundido. FlyPass inyecta volumen masivo de usuarios en horas valle, convirtiendo capacidad ociosa en puro margen de contribución.
+          </p>
+        </div>
+
+        <div style="background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 6px; padding: 16px;">
+          <div style="color: var(--brand-blue-tint); font-size: 13px; font-weight: 700; margin-bottom: 4px;">2. Cero Fricción B2C y Cero Riesgo de Recaudo</div>
+          <p style="font-size: 12.5px; color: #CBD5E1; line-height: 1.45;">
+            FlyPass asume el 100% de la adquirencia bancaria, pasarelas, contracargos y riesgo de fraude. El <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span> recibe una liquidación B2B garantizada por volumen mensual.
+          </p>
+        </div>
+
+        <div style="background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 6px; padding: 16px;">
+          <div style="color: #FBBF24; font-size: 13px; font-weight: 700; margin-bottom: 4px;">3. Externalización del Soporte al Conductor</div>
+          <p style="font-size: 12.5px; color: #CBD5E1; line-height: 1.45;">
+            Atender usuarios frustrados en electrolineras es costoso. FlyPass opera el centro de atención 24/7 y la resolución de incidencias en la app, aliviando al equipo del <span class="tooltip-text" title="Charge Point Operator: Operador del punto de carga (ej. Terpel, Enel, Celsia, EPM).">CPO</span>.
+          </p>
+        </div>
+
+        <div style="background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 6px; padding: 16px;">
+          <div style="color: #F472B6; font-size: 13px; font-weight: 700; margin-bottom: 4px;">4. Cumplimiento Regulatorio Mandatario (UPME)</div>
+          <p style="font-size: 12.5px; color: #CBD5E1; line-height: 1.45;">
+            La Res. 40559 de 2025 del MinEnergía exige a los CPOs interoperabilidad vía <span class="tooltip-text" title="Open Charge Point Interface: Protocolo estándar (ej. v2.2.1) para roaming entre eMSPs y CPOs.">OCPI</span> 2.2.1 hacia el SIEM. Integrarse con FlyPass aprovecha la inversión regulatoria ya realizada.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ========================================================================
+       LÓGICA JAVASCRIPT MATEMÁTICA Y REACTIVA (60 FPS)
+       ======================================================================== -->
+  <script>
+    // ESTADO GLOBAL DE LA APLICACIÓN
+    const state = {
+      // Infraestructura CPO
+      estaciones: 10,
+      conectoresPorEstacion: 2,
+      sesionesConectorDia: 3.5,
+      kwhSesion: 25,
+      precioKwh: 1800,
+      // Dinámica de Demanda & Canibalización
+      pctSesionesAdicionales: 35.0, // Uplift incremental aportado por FlyPass (+35%)
+      pctCanibalizacion: 5.0,        // % de usuarios actuales CPO que migran a FlyPass
+      // Finanzas y Pricing
+      margenFlypassPct: 10.0,
+      costoRedCPO: 750,
+      // Costos Operativos y de Transacción
+      adquirenciaFlypassPct: 1.7, // Costo bancos a FlyPass (~1.7%)
+      pasarelaCPOPct: 3.5,        // Pasarela de Pagos CPO (3.5% como en webapp referencia)
+      opexCPOPropioPct: 10.0,     // OPEX Operativo CPO propio (10%: CPMS, mantenimiento, soporte)
+      costoCloudOcpiPorSesion: 350,
+      opexSoporteFlypass: 1000000,
+      // Proyección
+      capexSoftware: 180000000,
+      crecimientoAnualEV: 25.0,
+      tasaDescuento: 14.0,
+      // Preset activo
+      presetCase: 'startup',
+      sankeyView: 'total' // 'total', 'flypass', 'cpo'
+    };
+
+    // CASOS HIPOTÉTICOS DE NEGOCIO PARA CPOs
+    let businessCases = {
+      startup:     { name: 'Red Naciente',     estaciones: 10, conectoresPorEstacion: 2, sesionesConectorDia: 1.5, kwhSesion: 25, precioKwh: 1800, costoRedCPO: 750, margenFlypassPct: 12.0, pctSesionesAdicionales: 60.0 },
+      consolidado: { name: 'Red Consolidada',  estaciones: 80, conectoresPorEstacion: 4, sesionesConectorDia: 3.5, kwhSesion: 35, precioKwh: 1900, costoRedCPO: 850, margenFlypassPct: 8.0, pctSesionesAdicionales: 20.0 },
+      urbano:      { name: 'Hub Urbano Alta',  estaciones: 15, conectoresPorEstacion: 6, sesionesConectorDia: 7.0, kwhSesion: 20, precioKwh: 1850, costoRedCPO: 700, margenFlypassPct: 10.0, pctSesionesAdicionales: 35.0 }
+    };
+    let defaultPresets = null;
+
+    async function initPresets() {
+      try {
+        const res = await fetch('/default_presets.json');
+        defaultPresets = await res.json();
+        
+        const saved = localStorage.getItem('fp_emsp_presets');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          for (const k in defaultPresets) {
+            if (!parsed[k]) parsed[k] = defaultPresets[k];
+          }
+          businessCases = parsed;
+        } else {
+          businessCases = JSON.parse(JSON.stringify(defaultPresets));
+        }
+      } catch (err) {
+        console.error('No se pudo cargar default_presets.json', err);
+        // Fallback to initial definitions
+        defaultPresets = JSON.parse(JSON.stringify(businessCases));
+      }
+      setPresetCase(state.presetCase || 'startup');
+    }
+
+    function saveCurrentPreset() {
+      const currentKey = state.presetCase;
+      for (const key in businessCases[currentKey]) {
+        if (state.hasOwnProperty(key) && key !== 'name') {
+          businessCases[currentKey][key] = state[key];
+        }
+      }
+      localStorage.setItem('fp_emsp_presets', JSON.stringify(businessCases));
+      alert(`✅ Configuración guardada en el navegador para: ${businessCases[currentKey].name}`);
+    }
+
+    function resetCurrentPreset() {
+      const currentKey = state.presetCase;
+      if (defaultPresets && defaultPresets[currentKey]) {
+        businessCases[currentKey] = JSON.parse(JSON.stringify(defaultPresets[currentKey]));
+        localStorage.setItem('fp_emsp_presets', JSON.stringify(businessCases));
+        setPresetCase(currentKey);
+        alert(`🔄 Configuración reestablecida a valores de fábrica para: ${businessCases[currentKey].name}`);
+      }
+    }
+
+    function setSankeyView(view) {
+      state.sankeyView = view;
+      ['total', 'flypass', 'cpo'].forEach(k => {
+        document.getElementById('btn-sankey-' + k).classList.remove('active');
+      });
+      document.getElementById('btn-sankey-' + view).classList.add('active');
+      recalculate();
+    }
+
+    function setPresetCase(key) {
+      state.presetCase = key;
+      const p = businessCases[key];
+      
+      // Actualizar state
+      Object.assign(state, p);
+
+      // Activar botón
+      document.querySelectorAll('.cpo-pill').forEach(el => el.classList.remove('active'));
+      const activeBtn = document.getElementById('btn-preset-' + key);
+      if(activeBtn) activeBtn.classList.add('active');
+
+      // Sincronizar inputs
+      if(document.getElementById('slider-estaciones')) document.getElementById('slider-estaciones').value = p.estaciones;
+      if(document.getElementById('slider-conectores')) document.getElementById('slider-conectores').value = p.conectoresPorEstacion;
+      if(document.getElementById('slider-sesiones-dia')) document.getElementById('slider-sesiones-dia').value = p.sesionesConectorDia;
+      if(document.getElementById('slider-kwh-sesion')) document.getElementById('slider-kwh-sesion').value = p.kwhSesion;
+      if(document.getElementById('slider-tarifa-pvp')) document.getElementById('slider-tarifa-pvp').value = p.precioKwh;
+      if(document.getElementById('slider-costo-red')) document.getElementById('slider-costo-red').value = p.costoRedCPO;
+      if(document.getElementById('slider-margen-flypass')) document.getElementById('slider-margen-flypass').value = p.margenFlypassPct;
+      if(document.getElementById('slider-uplift-fp')) document.getElementById('slider-uplift-fp').value = p.pctSesionesAdicionales;
+      if(document.getElementById('slider-canib-fp')) document.getElementById('slider-canib-fp').value = p.pctCanibalizacion;
+      if(document.getElementById('slider-adquirencia-fp')) document.getElementById('slider-adquirencia-fp').value = p.adquirenciaFlypassPct;
+      if(document.getElementById('slider-pasarela-cpo')) document.getElementById('slider-pasarela-cpo').value = p.pasarelaCPOPct;
+      if(document.getElementById('slider-opex-cpo')) document.getElementById('slider-opex-cpo').value = p.opexCPOPropioPct;
+      if(document.getElementById('slider-cloud')) document.getElementById('slider-cloud').value = p.costoCloudOcpiPorSesion;
+      if(document.getElementById('slider-opex')) document.getElementById('slider-opex').value = p.opexSoporteFlypass;
+
+      recalculate();
+    }
+
+    function updateState(key, val) {
+      state[key] = parseFloat(val);
+      recalculate();
+    }
+
+    // FORMATEADORES MONEDAS Y NÚMEROS (COLOMBIA)
+    function fmtMoney(num) {
+      const n = Math.round(Math.abs(num));
+      return (num < 0 ? '−$' : '$') + new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(n);
+    }
+
+    function fmtMoneyMM(num) {
+      const a = Math.abs(num);
+      if (a >= 1e12) {
+        return (num < 0 ? '−$' : '$') + (a / 1e12).toFixed(2).replace('.', ',') + ' B';
+      }
+      if (a >= 1e9) {
+        return (num < 0 ? '−$' : '$') + (a / 1e9).toFixed(2).replace('.', ',') + ' Mil MM';
+      }
+      if (a >= 1e6) {
+        return (num < 0 ? '−$' : '$') + (a / 1e6).toFixed(1).replace('.', ',') + ' MM';
+      }
+      return fmtMoney(num);
+    }
+
+    function fmtNum(num, dec = 0) {
+      return new Intl.NumberFormat('es-CO', { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(num);
+    }
+
+    function fmtPct(num) {
+      return (num < 0 ? '−' : '') + Math.abs(num).toFixed(1).replace('.', ',') + ' %';
+    }
+
+    // MOTOR DE CÁLCULO FINANCIERO
+    function computeFinancials() {
+      const s = state;
+      // 1. Demanda Base Orgánica del CPO
+      // Calculada según la capacidad instalada y utilización actual
+      const sesionesBaseCPO = s.estaciones * s.conectoresPorEstacion * s.sesionesConectorDia * 30.4;
+      const kwhBaseCPO = sesionesBaseCPO * s.kwhSesion;
+      const gmvBaseCPO = kwhBaseCPO * s.precioKwh;
+
+      // 2. Dinámica de Alianza eMSP: Canibalización y Demanda Incremental (Uplift)
+      const sesionesCanibalizadas = sesionesBaseCPO * (s.pctCanibalizacion / 100);
+      const sesionesAdicionalesFlypass = sesionesBaseCPO * (s.pctSesionesAdicionales / 100);
+
+      // Sesiones distribuidas por canal
+      const sesionesCPO = Math.max(0, sesionesBaseCPO - sesionesCanibalizadas);
+      const sesionesFlypass = sesionesAdicionalesFlypass + sesionesCanibalizadas;
+      const totalSesionesEcosistema = sesionesCPO + sesionesFlypass; // Crece exactamente en sesionesAdicionalesFlypass
+
+      const pctFlypass = totalSesionesEcosistema > 0 ? (sesionesFlypass / totalSesionesEcosistema) * 100 : 0;
+      const pctCPO = totalSesionesEcosistema > 0 ? (sesionesCPO / totalSesionesEcosistema) * 100 : 0;
+
+      // Energía por canal
+      const kwhCPO = sesionesCPO * s.kwhSesion;
+      const kwhFlypass = sesionesFlypass * s.kwhSesion;
+      const totalKwhEcosistema = kwhCPO + kwhFlypass;
+
+      // GMVs (Facturación bruta)
+      const gmvCPO = kwhCPO * s.precioKwh;
+      const gmvFlypass = kwhFlypass * s.precioKwh;
+      const gmvTotalEcosistema = gmvCPO + gmvFlypass;
+
+      // 3. Mecánica FlyPass eMSP
+      const precioMayorista = s.precioKwh * (1 - s.margenFlypassPct / 100);
+      const margenUnitarioFlypass = s.precioKwh - precioMayorista; // $/kWh
+      const liquidacionCPOs = kwhFlypass * precioMayorista;
+      const margenBrutoFlypass = kwhFlypass * margenUnitarioFlypass;
+
+      // Costos Operativos FlyPass (Adquirencia Bancaria 1.7%, Cloud OCPI, Soporte 24/7)
+      const costoAdquirenciaFlypass = gmvFlypass * (s.adquirenciaFlypassPct / 100);
+      const costoCloudFlypass = sesionesFlypass * s.costoCloudOcpiPorSesion;
+      const opexSoporteFlypass = s.opexSoporteFlypass;
+
+      const costosOperativosFlypass = costoAdquirenciaFlypass + costoCloudFlypass + opexSoporteFlypass;
+      const ebitdaFlypass = margenBrutoFlypass - costosOperativosFlypass;
+      const ebitdaMarginOnGMV = gmvFlypass > 0 ? (ebitdaFlypass / gmvFlypass) * 100 : 0;
+      const ebitdaMarginOnGross = margenBrutoFlypass > 0 ? (ebitdaFlypass / margenBrutoFlypass) * 100 : 0;
+
+      // 4. Mecánica del CPO
+      // A) En su Canal Propio:
+      // Paga energía de red, pasarela de pagos (3.5%) y su propio OPEX Operativo (10%: CPMS, mantenimiento, soporte app)
+      const costoEnergiaCPOPropio = kwhCPO * s.costoRedCPO;
+      const costoPasarelaCPO = gmvCPO * (s.pasarelaCPOPct / 100);
+      const costoOpexCPOPropio = gmvCPO * (s.opexCPOPropioPct / 100);
+      const margenBrutoCPOPropio = gmvCPO - costoPasarelaCPO - costoEnergiaCPOPropio - costoOpexCPOPropio;
+
+      // B) En el Canal FlyPass:
+      // Recibe liquidación mayorista. Paga energía de red y su OPEX operativo físico (mantenimiento, CPMS).
+      const costoEnergiaCPOFlypass = kwhFlypass * s.costoRedCPO;
+      const costoOpexCPOFlypass = gmvFlypass * (s.opexCPOPropioPct / 100);
+      const margenBrutoCPOFlypass = liquidacionCPOs - costoEnergiaCPOFlypass - costoOpexCPOFlypass;
+      const margenUnitarioCPOEnFlypass = kwhFlypass > 0 ? (margenBrutoCPOFlypass / kwhFlypass) : 0;
+
+      const ingresoTotalCPO = gmvCPO + liquidacionCPOs;
+      const margenBrutoTotalCPO = margenBrutoCPOPropio + margenBrutoCPOFlypass;
+
+      // C) Análisis comparativo: CPO Sin Alianza vs CPO Con FlyPass
+      // Sin FlyPass, el CPO atendía su base orgánica (sesionesBaseCPO) asumiendo Pasarela y su OPEX propio
+      const costoEnergiaBase = kwhBaseCPO * s.costoRedCPO;
+      const costoPasarelaBase = gmvBaseCPO * (s.pasarelaCPOPct / 100);
+      const costoOpexBase = gmvBaseCPO * (s.opexCPOPropioPct / 100);
+      const margenBrutoBaseCPO = gmvBaseCPO - costoPasarelaBase - costoEnergiaBase - costoOpexBase;
+
+      const beneficioNetoCPO = margenBrutoTotalCPO - margenBrutoBaseCPO;
+      const upliftMargenCPOPct = margenBrutoBaseCPO > 0 ? (beneficioNetoCPO / margenBrutoBaseCPO) * 100 : 0;
+
+      return {
+        sesionesBaseCPO, kwhBaseCPO, gmvBaseCPO,
+        sesionesCanibalizadas, sesionesAdicionalesFlypass,
+        sesionesCPO, sesionesFlypass, totalSesionesEcosistema,
+        pctFlypass, pctCPO, kwhCPO, kwhFlypass, totalKwhEcosistema,
+        gmvCPO, gmvFlypass, gmvTotalEcosistema,
+        precioMayorista, margenUnitarioFlypass, liquidacionCPOs, margenBrutoFlypass,
+        costoAdquirenciaFlypass, costoCloudFlypass, opexSoporteFlypass,
+        costosOperativosFlypass, ebitdaFlypass, ebitdaMarginOnGMV, ebitdaMarginOnGross,
+        costoEnergiaCPOPropio, costoPasarelaCPO, costoOpexCPOPropio, margenBrutoCPOPropio,
+        costoEnergiaCPOFlypass, costoOpexCPOFlypass, margenBrutoCPOFlypass, margenUnitarioCPOEnFlypass,
+        ingresoTotalCPO, margenBrutoTotalCPO,
+        margenBrutoBaseCPO, beneficioNetoCPO, upliftMargenCPOPct
+      };
+    }
+
+    // ACTUALIZACIÓN COMPLETA DE LA VISTA
+    function recalculate() {
+      const f = computeFinancials();
+      const s = state;
+
+      // Actualizar valores de sliders en labels
+      document.getElementById('val-estaciones').innerText = fmtNum(s.estaciones);
+      document.getElementById('val-conectores').innerText = fmtNum(s.conectoresPorEstacion);
+      document.getElementById('val-sesiones-dia').innerText = fmtNum(s.sesionesConectorDia, 1);
+      document.getElementById('val-kwh-sesion').innerText = fmtNum(s.kwhSesion) + ' kWh';
+      
+      // Controles de Demanda Incremental y Canibalización
+      document.getElementById('val-uplift-fp').innerText = `+${fmtPct(s.pctSesionesAdicionales)} Nuevas`;
+      document.getElementById('lbl-uplift-sessions').innerText = `+${fmtNum(Math.round(f.sesionesAdicionalesFlypass))} ses./mes`;
+      document.getElementById('val-canib-fp').innerText = `${fmtPct(s.pctCanibalizacion)} Migración`;
+      document.getElementById('lbl-canib-sessions').innerText = `-${fmtNum(Math.round(f.sesionesCanibalizadas))} ses./mes`;
+      
+      // Desglose visual en widget
+      document.getElementById('lbl-dyn-cpo-sessions').innerText = `${fmtNum(Math.round(f.sesionesCPO))} ses. (${fmtNum(f.pctCPO, 0)}%)`;
+      document.getElementById('lbl-dyn-fp-sessions').innerText = `${fmtNum(Math.round(f.sesionesFlypass))} ses. (${fmtNum(f.pctFlypass, 0)}%)`;
+      document.getElementById('lbl-dyn-total-sessions').innerText = `${fmtNum(Math.round(f.totalSesionesEcosistema))} ses. (+${fmtPct(s.pctSesionesAdicionales)} neto)`;
+      
+      // Badges
+      document.getElementById('badge-share-flypass').innerText = `+${fmtPct(s.pctSesionesAdicionales)} Uplift`;
+      document.getElementById('badge-cpo-gain').innerText = `+${fmtPct(f.upliftMargenCPOPct)} vs Sin FP`;
+
+      document.getElementById('val-tarifa-pvp').innerText = fmtMoney(s.precioKwh) + ' / kWh';
+      document.getElementById('val-margen-slider').innerText = fmtPct(s.margenFlypassPct) + ' Descuento';
+      document.getElementById('lbl-unit-margin').innerText = fmtMoney(f.margenUnitarioFlypass) + '/kWh';
+      document.getElementById('lbl-unit-wholesale').innerText = fmtMoney(f.precioMayorista) + '/kWh';
+      document.getElementById('badge-margen-pct').innerText = fmtPct(s.margenFlypassPct) + ' Margen';
+      document.getElementById('val-costo-red').innerText = fmtMoney(s.costoRedCPO) + ' / kWh';
+      document.getElementById('lbl-cpo-clean-margin').innerText = fmtMoney(f.margenUnitarioCPOEnFlypass) + '/kWh';
+      if(document.getElementById('lbl-opex-fp-text')) document.getElementById('lbl-opex-fp-text').innerText = fmtNum(s.opexCPOPropioPct, 1);
+
+      document.getElementById('val-adquirencia-fp').innerHTML = `${fmtPct(s.adquirenciaFlypassPct)} del <span class="tooltip-text" title="Gross Merchandise Value: Valor total bruto transaccionado o recaudado.">GMV</span>`;
+      document.getElementById('val-pasarela-cpo').innerText = fmtPct(s.pasarelaCPOPct) + ' del GMV CPO';
+      document.getElementById('val-opex-cpo').innerText = fmtPct(s.opexCPOPropioPct) + ' del GMV CPO';
+      document.getElementById('val-cloud').innerText = fmtMoney(s.costoCloudOcpiPorSesion) + ' / sesión';
+      document.getElementById('val-opex').innerText = fmtMoneyMM(s.opexSoporteFlypass) + ' / mes';
+
+      // Actualizar Dashboard de Ocupación
+      const maxSesionesPorDia = 15;
+      const conectoresTotales = s.estaciones * s.conectoresPorEstacion;
+      const capacidadTeoricaMes = conectoresTotales * maxSesionesPorDia * 30.4;
+      
+      const ocupacionCpoPct = capacidadTeoricaMes > 0 ? (f.sesionesCPO / capacidadTeoricaMes) * 100 : 0;
+      const ocupacionFpPct = capacidadTeoricaMes > 0 ? (f.sesionesFlypass / capacidadTeoricaMes) * 100 : 0;
+      const ocupacionTotalPct = ocupacionCpoPct + ocupacionFpPct;
+
+      if(document.getElementById('dash-conectores')) {
+        document.getElementById('dash-conectores').innerText = fmtNum(conectoresTotales);
+        document.getElementById('dash-capacidad-sesiones').innerText = fmtNum(Math.round(capacidadTeoricaMes));
+        document.getElementById('dash-ocupacion-pct').innerText = fmtPct(ocupacionTotalPct).replace('-', '');
+        document.getElementById('dash-ocupacion-pct').style.color = ocupacionTotalPct > 80 ? '#DC2626' : (ocupacionTotalPct > 40 ? '#16A34A' : '#F59E0B');
+        
+        document.getElementById('bar-ocupacion-cpo').style.width = Math.min(ocupacionCpoPct, 100) + '%';
+        document.getElementById('bar-ocupacion-fp').style.width = Math.min(ocupacionFpPct, Math.max(0, 100 - ocupacionCpoPct)) + '%';
+        
+        document.getElementById('lbl-ocupacion-cpo').innerText = fmtPct(ocupacionCpoPct).replace('-', '');
+        document.getElementById('lbl-ocupacion-fp').innerText = "+" + fmtPct(ocupacionFpPct).replace('-', '');
+      }
+
+      // Actualizar KPIs del Hero
+      document.getElementById('kpi-gmv-flypass').innerText = fmtMoneyMM(f.gmvFlypass);
+      document.getElementById('kpi-sub-gmv').innerText = `${fmtNum(Math.round(f.sesionesFlypass))} sesiones B2C (${fmtNum(Math.round(f.sesionesAdicionalesFlypass))} nuevas + ${fmtNum(Math.round(f.sesionesCanibalizadas))} migradas)`;
+
+      document.getElementById('kpi-margen-flypass').innerText = fmtMoneyMM(f.margenBrutoFlypass);
+      document.getElementById('kpi-sub-margen').innerText = fmtMoney(f.margenUnitarioFlypass) + ' COP retenidos por cada kWh (' + fmtPct(s.margenFlypassPct) + ')';
+
+      document.getElementById('kpi-margen-cpo-total').innerText = fmtMoneyMM(f.margenBrutoTotalCPO);
+      document.getElementById('kpi-sub-cpo').innerText = `Canal propio (post-Pasarela & OPEX) + Canal FlyPass limpio`;
+
+      document.getElementById('kpi-ebitda-flypass').innerText = fmtMoneyMM(f.ebitdaFlypass);
+      document.getElementById('kpi-ebitda-flypass').style.color = f.ebitdaFlypass >= 0 ? '#B6D95A' : '#FF85A2';
+      document.getElementById('kpi-sub-ebitda').innerText = fmtPct(f.ebitdaMarginOnGMV) + ' sobre GMV · ' + fmtPct(f.ebitdaMarginOnGross) + ' sobre Margen Bruto';
+
+      // Actualizar Tarjetas Concluyentes de Margen Bruto en Sección 03
+      document.getElementById('box-margen-bruto-fp').innerText = fmtMoneyMM(f.margenBrutoFlypass);
+      document.getElementById('box-margen-unit-fp').innerText = `(${fmtMoney(f.margenUnitarioFlypass)} / kWh)`;
+      document.getElementById('card-tag-margen-fp').innerText = `${fmtPct(s.margenFlypassPct)} de su GMV`;
+      document.getElementById('box-costos-fp').innerText = `${fmtMoneyMM(f.costosOperativosFlypass)} (Adq. 1.7% + Cloud + OPEX)`;
+      document.getElementById('box-ebitda-fp').innerText = `${fmtMoneyMM(f.ebitdaFlypass)} (${fmtPct(f.ebitdaMarginOnGMV)} s/GMV)`;
+
+      document.getElementById('box-margen-bruto-cpo').innerText = fmtMoneyMM(f.margenBrutoTotalCPO);
+      document.getElementById('box-margen-unit-cpo').innerText = `(${fmtPct((f.margenBrutoTotalCPO / f.gmvTotalEcosistema) * 100)} del Mercado Total)`;
+      document.getElementById('card-tag-margen-cpo').innerText = `+${fmtPct(f.upliftMargenCPOPct)} vs Operar Solo`;
+      document.getElementById('box-cpo-margin-direct').innerText = `${fmtMoneyMM(f.margenBrutoCPOPropio)} (Post-Pasarela & OPEX ${fmtPct(s.opexCPOPropioPct)})`;
+      document.getElementById('box-cpo-margin-fp').innerText = `${fmtMoneyMM(f.margenBrutoCPOFlypass)} (0% pasarela, 0% soporte)`;
+      document.getElementById('box-cpo-gain-net').innerText = `+${fmtMoneyMM(f.beneficioNetoCPO)} (+${fmtPct(f.upliftMargenCPOPct)})`;
+
+      // Actualizar Insights de negocio
+      document.getElementById('insight-1').innerHTML = `La alianza FlyPass expande la red CPO un <strong>+${fmtPct(s.pctSesionesAdicionales)}</strong>, inyectando <strong>+${fmtNum(Math.round(f.sesionesAdicionalesFlypass))} sesiones nuevas/mes</strong> frente a solo ${fmtNum(Math.round(f.sesionesCanibalizadas))} sesiones migradas (${fmtPct(s.pctCanibalizacion)} canibalización). GMV total: <strong>${fmtMoneyMM(f.gmvTotalEcosistema)}</strong>.`;
+      document.getElementById('insight-2').innerHTML = `FlyPass liquida al CPO <strong>${fmtMoneyMM(f.liquidacionCPOs)} COP</strong> limpios (${fmtMoney(f.precioMayorista)}/kWh), asumiendo el 100% de la adquirencia bancaria (~${fmtPct(s.adquirenciaFlypassPct)}), servidores cloud OCPI y mesa de ayuda 24/7.`;
+      
+      document.getElementById('insight-3').innerHTML = `Impacto Neto para el CPO: Obtiene <strong>+${fmtMoneyMM(f.beneficioNetoCPO)} COP/mes adicionales (+${fmtPct(f.upliftMargenCPOPct)})</strong> en margen bruto frente a operar en solitario. La demanda incremental traída por FlyPass aplasta el costo de la canibalización.`;
+
+      // Actualizar Tarjeta de Diagnóstico Sweet Spot
+      document.getElementById('card-unit-fp').innerText = fmtMoney(f.margenUnitarioFlypass) + ' / kWh';
+      document.getElementById('card-unit-cpo').innerText = fmtMoney(f.margenUnitarioCPOEnFlypass) + ' / kWh';
+      document.getElementById('card-vol-fp').innerText = fmtNum(Math.round(f.kwhFlypass)) + ' kWh/mes';
+
+      const dealBox = document.getElementById('status-deal-box');
+      const dealDesc = document.getElementById('status-deal-desc');
+      if (s.margenFlypassPct < 8) {
+        dealBox.innerText = 'DESFAVORABLE PARA FLYPASS';
+        dealBox.style.color = 'var(--brand-magenta)';
+        dealDesc.innerText = `Con solo ${fmtPct(s.margenFlypassPct)}, FlyPass apenas genera ${fmtMoneyMM(f.ebitdaFlypass)} de EBITDA tras adquirencia bancaria y no tiene incentivo para promover las estaciones del CPO en FlyMap.`;
+      } else if (s.margenFlypassPct > 15) {
+        dealBox.innerText = 'DESFAVORABLE PARA EL CPO';
+        dealBox.style.color = '#D97706';
+        dealDesc.innerText = `Con ${fmtPct(s.margenFlypassPct)}, el CPO sacrifica margen unitario ($${Math.round(f.margenUnitarioCPOEnFlypass)}/kWh), ralentizando el repago de su inversión física.`;
+      } else {
+        dealBox.innerText = 'PUNTO ÓPTIMO ALCANZADO (SWEET SPOT)';
+        dealBox.style.color = 'var(--brand-blue)';
+        dealDesc.innerText = `En ${fmtPct(s.margenFlypassPct)}, FlyPass opera con ${fmtPct(f.ebitdaMarginOnGMV)} de EBITDA y el CPO gana $${Math.round(f.margenUnitarioCPOEnFlypass)}/kWh netos sin costos de pasarela ni soporte, logrando un uplift neto de utilidad de +${fmtPct(f.upliftMargenCPOPct)}.`;
+      }
+
+      // Renderizar Gráficos
+      renderSweetSpotChart(f);
+      renderSankeyMoney(f);
+      renderWaterfall(f);
+      renderProjection(f);
+    }
+
+    // ========================================================================
+    // RENDERIZADO DEL GRÁFICO DE PUNTO ÓPTIMO (SWEET SPOT CURVES)
+    // ========================================================================
+    function renderSweetSpotChart(f) {
+      const svg = document.getElementById('svg-sweet-spot');
+      const W = 650, H = 220;
+      const padL = 40, padR = 40, padT = 20, padB = 30;
+
+      // Calcular puntos para margen del 5% al 30%
+      const ptsFP = [];
+      const ptsCPO = [];
+      const currentMargen = state.margenFlypassPct;
+
+      for (let m = 5; m <= 30; m += 1) {
+        const pMayorista = state.precioKwh * (1 - m / 100);
+        
+        // FlyPass
+        const mUnitFP = state.precioKwh - pMayorista;
+        const mBrutoFP = f.kwhFlypass * mUnitFP;
+        const ebitdaFP = mBrutoFP - f.costosOperativosFlypass;
+        const ebitdaPct = f.gmvFlypass > 0 ? (ebitdaFP / f.gmvFlypass) * 100 : 0;
+        
+        // CPO
+        const liquidacion = f.kwhFlypass * pMayorista;
+        const costoEnergia = f.kwhFlypass * state.costoRedCPO;
+        const costoOpex = f.gmvFlypass * (state.opexCPOPropioPct / 100);
+        const mBrutoCPO = liquidacion - costoEnergia - costoOpex;
+        const mUnitCPO = f.kwhFlypass > 0 ? (mBrutoCPO / f.kwhFlypass) : 0;
+
+        const x = padL + ((m - 5) / 25) * (W - padL - padR);
+        // Eje Y FlyPass: de -5% a +25%
+        const yFP = padT + (1 - (ebitdaPct - (-5)) / 30) * (H - padT - padB);
+        // Eje Y CPO: de $0 a $1.200 COP/kWh
+        const yCPO = padT + (1 - (mUnitCPO - 0) / 1200) * (H - padT - padB);
+
+        ptsFP.push({ x, y: yFP, m, val: ebitdaPct });
+        ptsCPO.push({ x, y: yCPO, m, val: mUnitCPO });
+      }
+
+      const dFP = ptsFP.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ');
+      const dCPO = ptsCPO.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ');
+
+      // Zona óptima: 8% a 12%
+      const xOpt1 = padL + ((8 - 5) / 25) * (W - padL - padR);
+      const xOpt2 = padL + ((12 - 5) / 25) * (W - padL - padR);
+
+      // Posición actual
+      const xCur = padL + ((currentMargen - 5) / 25) * (W - padL - padR);
+
+      let html = `
+        <defs>
+          <linearGradient id="optZoneGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.15"/>
+            <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.05"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Zona Óptima Sombreada -->
+        <rect x="${xOpt1}" y="${padT}" width="${xOpt2 - xOpt1}" height="${H - padT - padB}" fill="url(#optZoneGrad)" rx="6"/>
+        <line x1="${xOpt1}" y1="${padT}" x2="${xOpt1}" y2="${H - padB}" stroke="#3B82F6" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <line x1="${xOpt2}" y1="${padT}" x2="${xOpt2}" y2="${H - padB}" stroke="#3B82F6" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <text x="${(xOpt1 + xOpt2) / 2}" y="${padT + 14}" text-anchor="middle" font-size="9" font-weight="700" fill="#2563EB" font-family="Outfit">SWEET SPOT (8% - 12%)</text>
+
+        <!-- Línea Base Cero de EBITDA FlyPass -->
+        <line x1="${padL}" y1="${padT + (1 - (0 - (-5)) / 30) * (H - padT - padB)}" x2="${W - padR}" y2="${padT + (1 - (0 - (-5)) / 30) * (H - padT - padB)}" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="2 2"/>
+        <text x="${padL - 6}" y="${padT + (1 - (0 - (-5)) / 30) * (H - padT - padB) + 3}" text-anchor="end" font-size="9" fill="#94A3B8">0%</text>
+
+        <!-- Curva FlyPass (Verde) -->
+        <path d="${dFP}" fill="none" stroke="#16A34A" stroke-width="3" stroke-linecap="round"/>
+
+        <!-- Curva CPO (Naranja) -->
+        <path d="${dCPO}" fill="none" stroke="#D97706" stroke-width="3" stroke-linecap="round"/>
+
+        <!-- Línea Indicadora del Margen Seleccionado -->
+        <line x1="${xCur}" y1="${padT}" x2="${xCur}" y2="${H - padB}" stroke="#BD185C" stroke-width="2.5"/>
+        <circle cx="${xCur}" cy="${H - padB}" r="5" fill="#BD185C"/>
+        <text x="${xCur}" y="${H - padB + 14}" text-anchor="middle" font-size="10" font-weight="800" fill="#BD185C" font-family="Outfit">${currentMargen.toFixed(1)}%</text>
+      `;
+
+      svg.innerHTML = html;
+    }
+
+    // ========================================================================
+    // RENDERIZADO DEL SANKEY FINANCIERO INTERACTIVO (B2C)
+    // ========================================================================
+    function renderSankeyMoney(f) {
+      const svg = document.getElementById('svg-sankey-money');
+      const labelsContainer = document.getElementById('sankey-labels-container');
+      const W = 1000, H = 640;
+
+      // Nodos del Sankey Financiero B2C
+      let nodes = [];
+      let links = [];
+
+      if (state.sankeyView === 'total') {
+        nodes = [
+          // Columna 0: Mercado Total
+          { id: 'm_tot', col: 0, val: f.gmvTotalEcosistema, label: 'Gasto Total en Recarga B2C', fill: '#1E3A8A', desc: 'Total pagado por los conductores particulares en electrolineras públicas de Colombia.' },
+          
+          // Columna 1: Bifurcación Canales
+          { id: 'm_fp', col: 1, val: f.gmvFlypass, label: 'Canal App FlyPass (eMSP)', fill: '#2563EB', desc: 'Sesiones iniciadas desde la App FlyPass vía OCPI 2.2.1.' },
+          { id: 'm_cpo_dir', col: 1, val: f.gmvCPO, label: 'Canal App Propia CPO', fill: '#7C3AED', desc: 'Sesiones directas en la app nativa del CPO (Terpel, Enel, etc.).' },
+          
+          // Columna 2: Desglose Canal FlyPass & Canal CPO
+          { id: 'm_fp_bruto', col: 2, label: 'MARGEN BRUTO FLYPASS', val: f.margenBrutoFlypass, fill: '#3B82F6', desc: `Equivale al ${state.margenFlypassPct}% retenido exclusivamente del Canal FlyPass (${fmtMoney(f.margenUnitarioFlypass)}/kWh).` },
+          { id: 'm_cpo_transf', col: 2, val: f.liquidacionCPOs, label: 'Liquidación Mayorista al CPO', fill: '#14B8A6', desc: `Transferencia B2B mensual al CPO según CDRs inmutables de OCPI (${fmtMoney(f.precioMayorista)}/kWh).` },
+          { id: 'm_cpo_pasarela', col: 2, val: f.costoPasarelaCPO, label: 'Pasarela de Pagos CPO (3.5%)', fill: '#8B5CF6', desc: 'Costo de pasarela estándar del 3.5% que el CPO asume en su app propia en el mercado.' },
+          { id: 'm_cpo_opex_dir', col: 2, val: f.costoOpexCPOPropio, label: `OPEX CPO (CSMS y Físico) (${state.opexCPOPropioPct}%)`, fill: '#D97706', desc: `Costos operativos del canal propio (${state.opexCPOPropioPct}%): ecosistema app (CSMS, App propia), licenciamiento CPMS y hardware.` },
+          { id: 'm_cpo_cost_red_dir', col: 2, val: f.costoEnergiaCPOPropio, label: 'Costo Energía Red (CPO propio)', fill: '#F59E0B', desc: `Pago a comercializadora eléctrica por la energía dispensada en canal propio ($${state.costoRedCPO}/kWh).` },
+          { id: 'm_cpo_bruto_dir', col: 2, val: f.margenBrutoCPOPropio, label: 'Margen CPO (Canal Propio)', fill: '#059669', desc: `Margen neto que el CPO retiene de sus sesiones directas tras Pasarela 3.5%, OPEX propio (${state.opexCPOPropioPct}%) y energía de red.` },
+          
+          // Columna 3: Costos Operativos FlyPass & Margen CPO en FlyPass
+          { id: 'm_fp_adq', col: 3, val: f.costoAdquirenciaFlypass, label: 'Adquirencia Bancaria FlyPass (1.7%)', fill: '#BD185C', desc: 'Tarifa preferencial de adquirencia cobrada a FlyPass por la red bancaria (~1.7%).' },
+          { id: 'm_fp_cloud', col: 3, val: f.costoCloudFlypass, label: 'Cloud OCPI 2.2.1 & Mapas', fill: '#64748B', desc: 'Servidores cloud, balanceo de carga, enrutamiento y geolocalización de electrolineras.' },
+          { id: 'm_fp_opex', col: 3, val: f.opexSoporteFlypass, label: 'Soporte Conductor 24/7', fill: '#475569', desc: 'Mesa de ayuda omnicanal para conductores en ruta y conciliación de CDRs.' },
+          { id: 'm_fp_ebitda', col: 3, val: Math.max(0, f.ebitdaFlypass), label: 'EBITDA NETO FLYPASS', fill: '#16A34A', desc: 'Resultado neto operativo final del negocio eMSP de FlyPass en Colombia.' },
+          { id: 'm_cpo_cost_red_fp', col: 3, val: f.costoEnergiaCPOFlypass, label: 'Costo Energía Red (en FlyPass)', fill: '#F59E0B', desc: `Pago a comercializadora eléctrica por la energía dispensada en sesiones FlyPass ($${state.costoRedCPO}/kWh).` },
+          { id: 'm_cpo_opex_fp', col: 3, val: f.costoOpexCPOFlypass, label: `OPEX CPO (CSMS y Físico) (${state.opexCPOPropioPct}%)`, fill: '#D97706', desc: `Costos operativos del CPO (CSMS, App propia, Mantenimiento) asumidos proporcionalmente sobre estas sesiones.` },
+          { id: 'm_cpo_bruto_fp', col: 3, val: f.margenBrutoCPOFlypass, label: 'MARGEN CPO (CANAL FLYPASS)', fill: '#15803D', desc: `Margen neto para el CPO en sesiones FlyPass ($${Math.round(f.margenUnitarioCPOEnFlypass)}/kWh netos, sin costo de pasarela).` }
+        ];
+
+        links = [
+          { source: 'm_tot', target: 'm_fp', value: f.gmvFlypass },
+          { source: 'm_tot', target: 'm_cpo_dir', value: f.gmvCPO },
+          { source: 'm_fp', target: 'm_fp_bruto', value: f.margenBrutoFlypass },
+          { source: 'm_fp', target: 'm_cpo_transf', value: f.liquidacionCPOs },
+          { source: 'm_cpo_dir', target: 'm_cpo_pasarela', value: f.costoPasarelaCPO },
+          { source: 'm_cpo_dir', target: 'm_cpo_opex_dir', value: f.costoOpexCPOPropio },
+          { source: 'm_cpo_dir', target: 'm_cpo_cost_red_dir', value: f.costoEnergiaCPOPropio },
+          { source: 'm_cpo_dir', target: 'm_cpo_bruto_dir', value: f.margenBrutoCPOPropio },
+          { source: 'm_fp_bruto', target: 'm_fp_adq', value: f.costoAdquirenciaFlypass },
+          { source: 'm_fp_bruto', target: 'm_fp_cloud', value: f.costoCloudFlypass },
+          { source: 'm_fp_bruto', target: 'm_fp_opex', value: f.opexSoporteFlypass },
+          { source: 'm_fp_bruto', target: 'm_fp_ebitda', value: Math.max(0, f.ebitdaFlypass) },
+          { source: 'm_cpo_transf', target: 'm_cpo_cost_red_fp', value: f.costoEnergiaCPOFlypass },
+          { source: 'm_cpo_transf', target: 'm_cpo_opex_fp', value: f.costoOpexCPOFlypass },
+          { source: 'm_cpo_transf', target: 'm_cpo_bruto_fp', value: f.margenBrutoCPOFlypass }
+        ];
+      } else if (state.sankeyView === 'flypass') {
+        nodes = [
+          { id: 'm_tot', col: 0, val: f.gmvFlypass, label: 'Recaudo App FlyPass', fill: '#2563EB', desc: 'Total pagado exclusivamente a través de la App FlyPass.' },
+          { id: 'm_fp_bruto', col: 1, label: 'MARGEN BRUTO FLYPASS', val: f.margenBrutoFlypass, fill: '#3B82F6', desc: `Equivale al ${state.margenFlypassPct}% retenido.` },
+          { id: 'm_cpo_transf', col: 1, val: f.liquidacionCPOs, label: 'Liquidación Mayorista al CPO', fill: '#14B8A6', desc: `Transferencia B2B mensual al CPO.` },
+          { id: 'm_fp_adq', col: 2, val: f.costoAdquirenciaFlypass, label: 'Adquirencia Bancaria (1.7%)', fill: '#BD185C', desc: 'Tarifa preferencial.' },
+          { id: 'm_fp_cloud', col: 2, val: f.costoCloudFlypass, label: 'Cloud OCPI 2.2.1 & Mapas', fill: '#64748B', desc: 'Servidores cloud.' },
+          { id: 'm_fp_opex', col: 2, val: f.opexSoporteFlypass, label: 'Soporte Conductor 24/7', fill: '#475569', desc: 'Mesa de ayuda.' },
+          { id: 'm_fp_ebitda', col: 2, val: Math.max(0, f.ebitdaFlypass), label: 'EBITDA NETO FLYPASS', fill: '#16A34A', desc: 'Resultado neto operativo.' },
+          { id: 'm_cpo_cost_red_fp', col: 2, val: f.costoEnergiaCPOFlypass, label: 'Costo Energía Red', fill: '#F59E0B', desc: `Pago a comercializadora.` },
+          { id: 'm_cpo_opex_fp', col: 2, val: f.costoOpexCPOFlypass, label: `OPEX CPO (CSMS y Físico) (${state.opexCPOPropioPct}%)`, fill: '#D97706', desc: `Costos operativos del CPO (CSMS, App propia, Mantenimiento).` },
+          { id: 'm_cpo_bruto_fp', col: 2, val: f.margenBrutoCPOFlypass, label: 'MARGEN CPO (CANAL FLYPASS)', fill: '#15803D', desc: `Margen neto para el CPO en sesiones FlyPass.` }
+        ];
+        links = [
+          { source: 'm_tot', target: 'm_fp_bruto', value: f.margenBrutoFlypass },
+          { source: 'm_tot', target: 'm_cpo_transf', value: f.liquidacionCPOs },
+          { source: 'm_fp_bruto', target: 'm_fp_adq', value: f.costoAdquirenciaFlypass },
+          { source: 'm_fp_bruto', target: 'm_fp_cloud', value: f.costoCloudFlypass },
+          { source: 'm_fp_bruto', target: 'm_fp_opex', value: f.opexSoporteFlypass },
+          { source: 'm_fp_bruto', target: 'm_fp_ebitda', value: Math.max(0, f.ebitdaFlypass) },
+          { source: 'm_cpo_transf', target: 'm_cpo_cost_red_fp', value: f.costoEnergiaCPOFlypass },
+          { source: 'm_cpo_transf', target: 'm_cpo_opex_fp', value: f.costoOpexCPOFlypass },
+          { source: 'm_cpo_transf', target: 'm_cpo_bruto_fp', value: f.margenBrutoCPOFlypass }
+        ];
+      } else if (state.sankeyView === 'cpo') {
+        nodes = [
+          { id: 'm_tot', col: 0, val: f.gmvCPO, label: 'Recaudo App Propia CPO', fill: '#7C3AED', desc: 'Total pagado a través de la App propia del CPO.' },
+          { id: 'm_cpo_pasarela', col: 1, val: f.costoPasarelaCPO, label: 'Pasarela de Pagos CPO (3.5%)', fill: '#8B5CF6', desc: 'Costo de pasarela estándar del 3.5%.' },
+          { id: 'm_cpo_opex_dir', col: 1, val: f.costoOpexCPOPropio, label: `OPEX CPO (CSMS y Físico) (${state.opexCPOPropioPct}%)`, fill: '#D97706', desc: `Costos operativos del canal propio.` },
+          { id: 'm_cpo_cost_red_dir', col: 1, val: f.costoEnergiaCPOPropio, label: 'Costo Energía Red', fill: '#F59E0B', desc: `Pago a comercializadora eléctrica.` },
+          { id: 'm_cpo_bruto_dir', col: 1, val: f.margenBrutoCPOPropio, label: 'Margen CPO (Canal Propio)', fill: '#059669', desc: `Margen neto que el CPO retiene.` }
+        ];
+        links = [
+          { source: 'm_tot', target: 'm_cpo_pasarela', value: f.costoPasarelaCPO },
+          { source: 'm_tot', target: 'm_cpo_opex_dir', value: f.costoOpexCPOPropio },
+          { source: 'm_tot', target: 'm_cpo_cost_red_dir', value: f.costoEnergiaCPOPropio },
+          { source: 'm_tot', target: 'm_cpo_bruto_dir', value: f.margenBrutoCPOPropio }
+        ];
+      }
+
+      const rootGmv = state.sankeyView === 'total' ? f.gmvTotalEcosistema : (state.sankeyView === 'flypass' ? f.gmvFlypass : f.gmvCPO);
+
+      // Algoritmo de distribución de columnas y alturas
+      const cols = {};
+      nodes.forEach(n => { (cols[n.col] = cols[n.col] || []).push(n); });
+      const colKeys = Object.keys(cols).map(Number).sort((a, b) => a - b);
+      const gapY = 28;
+      const nw = 14;
+      const topPad = 60;
+      const usableH = H - topPad - 40;
+
+      // Escala vertical
+      let maxTot = 0;
+      colKeys.forEach(k => {
+        const tot = cols[k].reduce((acc, n) => acc + Math.max(0, n.val), 0);
+        if (tot > maxTot) maxTot = tot;
+      });
+      const scale = maxTot > 0 ? (usableH - gapY * 5) / maxTot : 0;
+
+      const gapX = (W - 160 - nw) / (colKeys.length - 1);
+      colKeys.forEach((k, cIdx) => {
+        const arr = cols[k];
+        arr.forEach(n => {
+          n.h = Math.max(4, Math.max(0, n.val) * scale);
+          n.w = nw;
+          n.x = 40 + cIdx * gapX;
+        });
+        const totColH = arr.reduce((acc, n) => acc + n.h, 0) + gapY * (arr.length - 1);
+        let curY = topPad + (usableH - totColH) / 2;
+        arr.forEach(n => {
+          n.y = curY;
+          n.oy = curY;
+          n.iy = curY;
+          curY += n.h + gapY;
+        });
+      });
+
+      const byId = {};
+      nodes.forEach(n => { byId[n.id] = n; });
+
+      // Generar paths bezier de los enlaces
+      const linkPaths = links.map((l, i) => {
+        const s = byId[l.source], t = byId[l.target];
+        const h = Math.max(2, Math.max(0, l.value) * scale);
+        const y0 = s.oy, y1 = t.iy;
+        s.oy += h; t.iy += h;
+        const x0 = s.x + s.w, x1 = t.x;
+        const c = x0 + (x1 - x0) * 0.5;
+        const d = `M ${x0},${y0} C ${c},${y0} ${c},${y1} ${x1},${y1} L ${x1},${y1 + h} C ${c},${y1 + h} ${c},${y0 + h} ${x0},${y0 + h} Z`;
+        return {
+          d,
+          gradId: `sankeyGrad_${i}`,
+          c0: s.fill,
+          c1: t.fill,
+          val: l.value,
+          sourceId: s.id,
+          targetId: t.id,
+          sourceName: s.label,
+          targetName: t.label,
+          desc: `${s.label} → ${t.label}: ${fmtMoneyMM(l.value)} (${fmtPct((l.value / rootGmv) * 100)} de la vista actual)`
+        };
+      });
+
+      // Renderizar SVG
+      let svgHtml = `<defs>`;
+      linkPaths.forEach(lp => {
+        svgHtml += `
+          <!-- Gradiente Estático -->
+          <linearGradient id="${lp.gradId}_static" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="${lp.c0}" stop-opacity="0.6"/>
+            <stop offset="100%" stop-color="${lp.c1}" stop-opacity="0.6"/>
+          </linearGradient>
+          <!-- Gradiente de Flujo de Plasma -->
+          <linearGradient id="${lp.gradId}_flow" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="${lp.c0}" stop-opacity="0.3"/>
+            <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="${lp.c1}" stop-opacity="0.3"/>
+            <animateTransform attributeName="gradientTransform" type="translate" from="-1 0" to="1 0" dur="1.2s" repeatCount="indefinite"/>
+          </linearGradient>
+        `;
+      });
+      svgHtml += `</defs>`;
+
+      // Enlaces
+      linkPaths.forEach((lp, idx) => {
+        svgHtml += `
+          <path class="sankey-link" data-source="${lp.sourceId}" data-target="${lp.targetId}" id="link-${idx}"
+                d="${lp.d}" fill="url(#${lp.gradId}_static)" data-grad-static="url(#${lp.gradId}_static)" data-grad-flow="url(#${lp.gradId}_flow)"
+                style="transition: fill 0.3s ease, opacity 0.3s ease; stroke-width: 0;"
+                onmouseenter="highlightSankey('${lp.sourceId}', '${lp.targetId}'); setHoverInfo('${lp.targetName}', '${lp.desc}', '${lp.c1}')"
+                onmouseleave="resetSankey(); resetHoverInfo()"/>
+        `;
+      });
+
+      // Nodos
+      nodes.forEach(n => {
+        const isEbitda = n.id === 'm_fp_ebitda';
+        const extraStyle = isEbitda ? 'animation: pulse-ebitda 2s infinite;' : '';
+        svgHtml += `
+          <rect class="sankey-node" data-id="${n.id}" x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="2" fill="${n.fill}" style="${extraStyle}"
+                onmouseenter="highlightSankeyNode('${n.id}'); setHoverInfo('${n.label}', '${n.desc} · Valor: ${fmtMoneyMM(n.val)} (${fmtPct((n.val / f.gmvTotalEcosistema) * 100)})', '${n.fill}')"
+                onmouseleave="resetSankey(); resetHoverInfo()"/>
+        `;
+      });
+
+      svg.innerHTML = svgHtml;
+
+      // Renderizar etiquetas HTML flotantes
+      let labelsHtml = '';
+      nodes.forEach(n => {
+        const leftPct = (n.x / W) * 100;
+        const topPct = (n.y / H) * 100;
+        labelsHtml += `
+          <div style="position: absolute; left: ${leftPct.toFixed(1)}%; top: ${topPct.toFixed(1)}%; transform: translate(${n.col >= 2 ? '-100%' : '18px'}, -8px); pointer-events: none; display: flex; flex-direction: column; gap: 1px; background: rgba(255,255,255,.94); border: 1px solid #E2E8F0; border-radius: 6px; padding: 3px 7px; box-shadow: 0 2px 5px rgba(0,0,0,.06); white-space: nowrap; z-index: 10;">
+            <span style="font-size: 11px; font-weight: 700; color: ${n.fill}; font-family: Outfit;">${n.label}</span>
+            <span style="font-size: 10.5px; font-weight: 600; color: #475569; font-variant-numeric: tabular-nums;">${fmtMoneyMM(n.val)} · ${fmtPct((n.val / rootGmv) * 100)}</span>
+          </div>
+        `;
+      });
+      labelsContainer.innerHTML = labelsHtml;
+    }
+
+    // LÓGICA DE ILUMINACIÓN DE FLUJOS (SANKEY) Y TRAZADO DE CAMINOS
+    function getSankeyPathNodes(startId, direction) {
+      const result = new Set();
+      const queue = [startId];
+      while(queue.length > 0) {
+        const curr = queue.shift();
+        result.add(curr);
+        document.querySelectorAll('.sankey-link').forEach(link => {
+          if (direction === 'up' && link.getAttribute('data-target') === curr) {
+            queue.push(link.getAttribute('data-source'));
+          }
+          if (direction === 'down' && link.getAttribute('data-source') === curr) {
+            queue.push(link.getAttribute('data-target'));
+          }
+        });
+      }
+      return result;
+    }
+
+    function applyHighlight(activeNodes) {
+      document.querySelectorAll('.sankey-link').forEach(el => {
+        const s = el.getAttribute('data-source');
+        const t = el.getAttribute('data-target');
+        if (activeNodes.has(s) && activeNodes.has(t)) {
+          el.classList.add('highlight');
+          el.classList.remove('faded');
+          el.setAttribute('fill', el.getAttribute('data-grad-flow'));
+        } else {
+          el.classList.add('faded');
+          el.classList.remove('highlight');
+          el.setAttribute('fill', el.getAttribute('data-grad-static'));
+        }
+      });
+      document.querySelectorAll('.sankey-node').forEach(el => {
+        if (activeNodes.has(el.getAttribute('data-id'))) {
+          el.classList.add('highlight');
+          el.classList.remove('faded');
+        } else {
+          el.classList.add('faded');
+          el.classList.remove('highlight');
+        }
+      });
+    }
+
+    function highlightSankey(sourceId, targetId) {
+      const up = getSankeyPathNodes(sourceId, 'up');
+      const down = getSankeyPathNodes(targetId, 'down');
+      const activeNodes = new Set([...up, ...down]);
+      applyHighlight(activeNodes);
+    }
+
+    function highlightSankeyNode(nodeId) {
+      const up = getSankeyPathNodes(nodeId, 'up');
+      const down = getSankeyPathNodes(nodeId, 'down');
+      const activeNodes = new Set([...up, ...down]);
+      applyHighlight(activeNodes);
+    }
+
+    function resetSankey() {
+      document.querySelectorAll('.sankey-link').forEach(el => {
+        el.classList.remove('highlight', 'faded');
+        el.setAttribute('fill', el.getAttribute('data-grad-static'));
+      });
+      document.querySelectorAll('.sankey-node').forEach(el => {
+        el.classList.remove('highlight', 'faded');
+      });
+    }
+
+    // LÓGICA DE ILUMINACIÓN WATERFALL
+    function highlightWaterfall(activeIndex) {
+      document.querySelectorAll('.waterfall-bar').forEach((el, idx) => {
+        if (idx !== activeIndex) {
+          el.style.filter = 'grayscale(0.8) opacity(0.3)';
+        } else {
+          el.style.filter = 'brightness(1.2)';
+        }
+      });
+    }
+
+    function resetWaterfall() {
+      document.querySelectorAll('.waterfall-bar').forEach(el => {
+        el.style.filter = '';
+      });
+    }
+    function setHoverInfo(title, desc, color) {
+      const card = document.getElementById('hover-card-info');
+      const icon = document.getElementById('hover-card-icon');
+      const t = document.getElementById('hover-card-title');
+      const d = document.getElementById('hover-card-desc');
+
+      t.innerText = title;
+      d.innerText = desc;
+      t.style.color = color;
+      icon.style.background = color;
+      card.style.background = '#F0FDF4';
+      card.style.borderColor = color;
+    }
+
+    function resetHoverInfo() {
+      const card = document.getElementById('hover-card-info');
+      const icon = document.getElementById('hover-card-icon');
+      const t = document.getElementById('hover-card-title');
+      const d = document.getElementById('hover-card-desc');
+
+      t.innerText = 'Recorra el diagrama con el cursor';
+      d.innerText = 'Toque o pase el cursor sobre cualquier nodo o rama para conocer su valor en pesos colombianos, porcentaje sobre el total y su fundamento legal/operativo bajo OCPI 2.2.1.';
+      t.style.color = 'var(--brand-blue-ink)';
+      icon.style.background = 'var(--brand-blue)';
+      card.style.background = '#EFF5FF';
+      card.style.borderColor = '#BFDBFE';
+    }
+
+    // ========================================================================
+    // RENDERIZADO DEL WATERFALL CHART (FLYPASS CASHFLOW)
+    // ========================================================================
+    function renderWaterfall(f) {
+      const container = document.getElementById('waterfall-bars-container');
+      const labelsRow = document.getElementById('waterfall-labels-row');
+      const H = 240;
+
+      const steps = [
+        { label: 'Recaudo FlyPass (GMV)', amount: f.gmvFlypass, isTotal: true, color: '#2563EB' },
+        { label: 'Liquidación Mayorista CPO', amount: -f.liquidacionCPOs, isTotal: false, color: '#14B8A6' },
+        { label: 'MARGEN BRUTO FLYPASS', amount: f.margenBrutoFlypass, isTotal: true, color: '#3B82F6' },
+        { label: 'Adquirencia Bancos (1.7%)', amount: -f.costoAdquirenciaFlypass, isTotal: false, color: '#475569' },
+        { label: 'Cloud OCPI & Mapas', amount: -f.costoCloudFlypass, isTotal: false, color: '#64748B' },
+        { label: 'OPEX Soporte 24/7', amount: -f.opexSoporteFlypass, isTotal: false, color: '#475569' },
+        { label: 'EBITDA Mensual FlyPass', amount: f.ebitdaFlypass, isTotal: true, color: f.ebitdaFlypass >= 0 ? '#10B981' : '#EF4444' }
+      ];
+
+      let run = 0;
+      const calcSteps = steps.map(s => {
+        let a, b;
+        if (s.isTotal) {
+          a = 0;
+          b = s.amount;
+          run = s.amount;
+        } else {
+          a = run;
+          run += s.amount;
+          b = run;
+        }
+        return { ...s, a, b };
+      });
+
+      let maxVal = Math.max(...calcSteps.map(s => Math.max(s.a, s.b)), f.gmvFlypass);
+      let minVal = Math.min(0, ...calcSteps.map(s => Math.min(s.a, s.b)));
+      const span = (maxVal - minVal) || 1;
+      const scale = H / span;
+
+      let barsHtml = '';
+      let labelsHtml = '';
+
+      calcSteps.forEach((s, idx) => {
+        const lo = Math.min(s.a, s.b);
+        const hi = Math.max(s.a, s.b);
+        const bBottom = (lo - minVal) * scale;
+        const bHeight = Math.max(4, (hi - lo) * scale);
+        
+        const isEbitda = idx === calcSteps.length - 1;
+        const anim = isEbitda 
+            ? `bar-enter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, pulse-ebitda 2s infinite`
+            : `bar-enter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards`;
+
+        barsHtml += `
+          <div style="flex: 1; height: 100%; position: relative;">
+            <div class="waterfall-bar" 
+                 style="position: absolute; left: 6px; right: 6px; bottom: ${bBottom.toFixed(1)}px; height: ${bHeight.toFixed(1)}px; background: ${s.color}; border-radius: 2px; opacity: 0; animation: ${anim}; animation-delay: ${idx * 0.1}s${isEbitda ? ', ' + ((idx * 0.1) + 0.5) + 's' : ''}; box-shadow: 0 1px 3px rgba(0,0,0,.1);"
+                 onmouseenter="highlightWaterfall(${idx}); setHoverInfo('${s.label}', 'Valor: ${fmtMoneyMM(s.amount)}', '${s.color}')"
+                 onmouseleave="resetWaterfall(); resetHoverInfo()"></div>
+          </div>
+        `;
+
+        labelsHtml += `
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase;">${s.label}</span>
+            <span style="font-size: 13px; font-weight: 800; color: ${s.color}; font-variant-numeric: tabular-nums;">${fmtMoneyMM(s.amount)}</span>
+            <span style="font-size: 10.5px; color: #94A3B8;">${fmtPct(Math.abs(s.amount) / f.gmvFlypass * 100)}</span>
+          </div>
+        `;
+      });
+
+      container.innerHTML = barsHtml;
+      labelsRow.innerHTML = labelsHtml;
+    }
+
+    // ========================================================================
+    // RENDERIZADO DE PROYECCIÓN A 5 AÑOS (ASSET-LIGHT)
+    // ========================================================================
+    function renderProjection(f) {
+      const svg = document.getElementById('svg-projection');
+      const capex = state.capexSoftware;
+      const ebitdaMes1 = f.ebitdaFlypass;
+      const g = state.crecimientoAnualEV / 100;
+      const r = state.tasaDescuento / 100;
+
+      const flows = [];
+      let acum = -capex;
+      const series = [acum];
+
+      for (let yr = 1; yr <= 5; yr++) {
+        // Crecimiento anual de adopción EV
+        const ebitdaAnual = ebitdaMes1 * 12 * Math.pow(1 + g, yr - 1);
+        acum += ebitdaAnual;
+        flows.push(ebitdaAnual);
+        series.push(acum);
+      }
+
+      // VPN
+      let vpn = -capex;
+      flows.forEach((fl, i) => {
+        vpn += fl / Math.pow(1 + r, i + 1);
+      });
+
+      // Payback
+      let paybackMeses = 0;
+      if (ebitdaMes1 > 0) {
+        paybackMeses = Math.min(60, Math.round(capex / ebitdaMes1));
+      }
+
+      // TIR simplificada
+      let tirEst = ebitdaMes1 > 0 ? ((ebitdaMes1 * 12) / capex) * 100 : 0;
+
+      document.getElementById('proj-capex').innerText = fmtMoneyMM(capex);
+      document.getElementById('proj-vpn').innerText = fmtMoneyMM(vpn);
+      document.getElementById('proj-tir').innerText = fmtPct(tirEst);
+      document.getElementById('proj-payback').innerText = (paybackMeses > 0 ? paybackMeses + ' meses' : 'N/A');
+
+      // Dibujar SVG de Flujo Acumulado
+      const W = 800, H = 160;
+      const padL = 60, padR = 40, padT = 15, padB = 25;
+      const maxS = Math.max(...series, 1);
+      const minS = Math.min(...series, -capex);
+      const spanS = (maxS - minS) || 1;
+
+      const pts = series.map((val, i) => {
+        const x = padL + (i / 5) * (W - padL - padR);
+        const y = padT + (1 - (val - minS) / spanS) * (H - padT - padB);
+        return { x, y, val, label: i === 0 ? 'Inicio' : 'Año ' + i };
+      });
+
+      const lineD = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ');
+      const zeroY = padT + (1 - (0 - minS) / spanS) * (H - padT - padB);
+      const areaD = lineD + ` L ${pts[pts.length - 1].x},${zeroY} L ${pts[0].x},${zeroY} Z`;
+
+      let svgHtml = `
+        <defs>
+          <linearGradient id="projAreaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#2F64C0" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#2F64C0" stop-opacity="0.02"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Área de Flujo Positivo -->
+        <path d="${areaD}" fill="url(#projAreaGrad)"/>
+        <!-- Línea Cero -->
+        <line x1="${padL}" y1="${zeroY}" x2="${W - padR}" y2="${zeroY}" stroke="#94A3B8" stroke-dasharray="3 3"/>
+
+        <!-- Línea de Tendencia -->
+        <path d="${lineD}" fill="none" stroke="#2F64C0" stroke-width="3" stroke-linecap="round"/>
+
+        <!-- Puntos y Etiquetas -->
+      `;
+
+      pts.forEach(p => {
+        svgHtml += `
+          <circle cx="${p.x}" cy="${p.y}" r="4.5" fill="${p.val >= 0 ? '#15803D' : '#BD185C'}"/>
+          <text x="${p.x}" y="${H - 6}" text-anchor="middle" font-size="10" font-weight="600" fill="#64748B">${p.label}</text>
+          <text x="${p.x}" y="${p.y - 8}" text-anchor="middle" font-size="10" font-weight="700" fill="${p.val >= 0 ? '#15803D' : '#BD185C'}">${fmtMoneyMM(p.val)}</text>
+        `;
+      });
+
+      svg.innerHTML = svgHtml;
+    }
+
+    // ARRANQUE INICIAL
+    window.addEventListener('DOMContentLoaded', () => {
+      initPresets();
+    });
+  </script>
+</body>
+</html>
